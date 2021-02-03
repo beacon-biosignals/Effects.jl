@@ -1,6 +1,7 @@
 using Base.Iterators: product
 using DataFrames
 using LinearAlgebra
+using Statistics
 using StatsModels
 using Tables
 
@@ -16,7 +17,7 @@ _decompose_coefname(x) = Set(split(x, r"\s&\s"))
 
 """
     effects!(reference_grid::DataFrame, formula::FormulaTerm,
-             model::LinearMixedModel;
+             model::RegressionModel;
              contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean)
 
 
@@ -74,7 +75,7 @@ function effects!(reference_grid::DataFrame, formula::FormulaTerm, model::Regres
         if allcols[idx] in refcols
             return X[:, refcols .== Ref(allcols[idx])]
         else
-            val = typical(model[:, idx])
+            val = typical(modelmatrix(model)[:, idx])
             vec = Vector{Float64}(undef, nrows)
             vec .= val
             return vec
@@ -92,7 +93,7 @@ end
 """
     effects(design::Union{NamedTuple, Dict},
             formula::FormulaTerm,
-            model::LinearMixedModel;
+            model::RegressionModel;
             contrasts=Dict{Symbol,Any}(),
             err_col=:err, typical=mean,
             lower_col=:lower,
@@ -107,7 +108,7 @@ is specified. This is then expanded into a reference grid representing a
 fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
-function effects(design::Union{Dict,NamedTuple}, formula::FormulaTerm, model::RegressionModel;
+function effects(design::NamedTuple, formula::FormulaTerm, model::RegressionModel;
                  contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper)
     dv = formula.lhs.sym
@@ -124,7 +125,7 @@ function effects(design::Union{Dict,NamedTuple}, formula::FormulaTerm, model::Re
     return reference_grid
 end
 
-function effects(design::Dict, args....; kwargs...)
+function effects(design::Dict, args...; kwargs...)
     nt = (;design...)
     return effects(nt, args...; kwargs...)
 end
