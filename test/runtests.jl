@@ -16,7 +16,7 @@ using Test
 
         design = Dict(:x => 1:20)
         # waiting on https://github.com/JuliaStats/StatsModels.jl/pull/211
-        # effects(design, @formula(y ~ x), model)
+        effects(design, @formula(y ~ x), model)
     end
 
     @testset "multiple" begin
