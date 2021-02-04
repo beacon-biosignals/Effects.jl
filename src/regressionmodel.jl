@@ -3,6 +3,7 @@ using DataFrames
 using LinearAlgebra
 using Statistics
 using StatsModels
+using StatsBase
 using Tables
 
 """
