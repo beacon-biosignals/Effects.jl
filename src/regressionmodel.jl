@@ -91,6 +91,14 @@ function effects!(reference_grid::DataFrame, formula::FormulaTerm, model::Regres
     return reference_grid
 end
 
+function _reference_grid(design, dv)
+    colnames =  [collect(keys(design)); dv]
+    return map(product(values(design)...)) do row
+        rowdv = (row..., 0.0)
+        return (; zip(colnames, rowdv)...)
+    end
+end
+
 """
     effects(design::Union{NamedTuple, Dict},
             formula::FormulaTerm,
@@ -113,12 +121,8 @@ function effects(design::NamedTuple, formula::FormulaTerm, model::RegressionMode
                  contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper)
     dv = formula.lhs.sym
-    colnames =  [collect(keys(design)); dv]
-    reference_grid = map(product(values(design)...)) do row
-        rowdv = (row..., 0.0)
-        return (; zip(colnames, rowdv)...)
-    end
-    reference_grid = effects!(DataFrame(reference_grid), formula, model; contrasts=contrasts,
+    reference_grid = DataFrame(_reference_grid(design, dv))
+    reference_grid = effects!(reference_grid, formula, model; contrasts=contrasts,
                               err_col=err_col, typical=typical)
     # XXX DataFrames dependency
     reference_grid[!, lower_col] = reference_grid[!, dv] - reference_grid[!, err_col]
