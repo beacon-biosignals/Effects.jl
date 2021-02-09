@@ -14,7 +14,11 @@ Split a coefficient name into  a set of constituent lower-order term names.
 This is useful for comparing coefficient names constructed from formulae
 with potentially different ordering of lower-order term names.
 """
-_decompose_coefname(x) = Set(split(x, r"\s&\s"))
+_decompose_coefname(x) = Set(string.(split(x, r"\s&\s")))
+
+# autowrap scalars -- useful for coefnames sometimes returning a scalar
+_vec(x) = [x]
+_vec(x::AbstractArray) = x
 
 """
     effects!(reference_grid::DataFrame, formula::FormulaTerm,
@@ -68,8 +72,8 @@ function effects!(reference_grid::Tables.ColumnTable, formula::FormulaTerm, mode
     depvar = form.lhs.sym
     y, X = modelcols(form, reference_grid)
     # note that we need columns, not terms now!
-    refcols = _decompose_coefname.(coefnames(form.rhs))
-    allcols = _decompose_coefname.(coefnames(model))
+    refcols = _decompose_coefname.(_vec(coefnames(form.rhs)))
+    allcols = _decompose_coefname.(_vec(coefnames(model)))
     nrows = size(X)[1]
     ncols = length(allcols)
     Xs = map(1:ncols) do idx

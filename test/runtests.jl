@@ -15,8 +15,15 @@ using Test
         model = lm(@formula(y ~ x), data)
 
         design = Dict(:x => 1:20)
-        # waiting on https://github.com/JuliaStats/StatsModels.jl/pull/211
-        effects(design, @formula(y ~ x), model)
+        eff = effects(design, @formula(y ~ x), model)
+        # test effect
+        @test eff.y ≈ eff.x .* last(coef(model)) .+ first(coef(model))
+        # test error
+        pred = [1 first(eff.x)]
+        @test first(eff.err) ≈ only(sqrt(pred *  vcov(model) * pred'))
+        # test CI
+        @test eff.lower ≈ eff.y - eff.err
+        @test eff.upper ≈ eff.y + eff.err
     end
 
     @testset "multiple" begin
