@@ -20,7 +20,8 @@ using Test
         @test eff.y ≈ eff.x .* last(coef(model)) .+ first(coef(model))
         # test error
         pred = [1 first(eff.x)]
-        @test first(eff.err) ≈ only(sqrt(pred *  vcov(model) * pred'))
+        # if we drop support for Julia < 1.4, this first can become only
+        @test first(eff.err) ≈ first(sqrt(pred *  vcov(model) * pred'))
         # test CI
         @test eff.lower ≈ eff.y - eff.err
         @test eff.upper ≈ eff.y + eff.err
