@@ -1,11 +1,3 @@
-using Base.Iterators: product
-using DataFrames
-using LinearAlgebra
-using Statistics
-using StatsModels
-using StatsBase
-using Tables
-
 """
     _decompose_coefname(::String)
 
