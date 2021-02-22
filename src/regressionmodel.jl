@@ -33,8 +33,9 @@ grid for the terms specified in the formula. For terms present in the model,
 but not in the formula and reference grid, then the typical value of those
 predictors is used. (In other words, effects are conditional on the typical
 value.) The function for computing typical values is specified via `typical`.
-Note that this is also applied to categorical contrasts, thus yielding a
-weighted average of the contrast.
+Note that this is also applied to categorical contrasts, thus yielding an
+average of the contrast, weighted by the balance of levels in the data\
+set used to fit the model.
 
 The column corresponding to the response variable in the formula is overwritten
 with the effects. Pointwise standard errors are written into the column
