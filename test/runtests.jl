@@ -8,7 +8,6 @@ using StatsModels
 using Test
 
 @testset "linear regression" begin
-
     b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
 
     @testset "simple" begin
