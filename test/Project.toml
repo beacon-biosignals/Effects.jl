@@ -1,0 +1,6 @@
+[deps]
+StandardizedPredictors = "5064a6a7-f8c2-40e2-8bdc-797ec6f1ae18"
+StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+
+[compat]
+StandardizedPredictors = "0.1"

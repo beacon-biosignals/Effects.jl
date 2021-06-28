@@ -3,6 +3,8 @@ using DataFrames
 using Effects
 using GLM
 using StableRNGs
+using StandardizedPredictors
+using StatsModels
 using Test
 
 @testset "linear regression" begin
@@ -25,6 +27,18 @@ using Test
         # test CI
         @test eff.lower ≈ eff.y - eff.err
         @test eff.upper ≈ eff.y + eff.err
+
+        @testset "contrasts" begin
+            contrasts = Dict(:x => Center(10))
+            model_centered = lm(@formula(y ~ x), data; contrasts=contrasts)
+
+            eff_centered = effects(design, @formula(y ~ x), model_centered; contrasts=contrasts)
+
+            # different contrasts shouldn't affect the predictions/effects
+            @test eff_centered.y ≈ eff.y
+            @test eff_centered.lower ≈ eff.lower
+            @test eff_centered.upper ≈ eff.upper
+        end
     end
 
     @testset "multiple" begin
