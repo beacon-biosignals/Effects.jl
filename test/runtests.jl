@@ -4,6 +4,7 @@ using Effects
 using GLM
 using StableRNGs
 using StandardizedPredictors
+using Statistics
 using StatsModels
 using Test
 
