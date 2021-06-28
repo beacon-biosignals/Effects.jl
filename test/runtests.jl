@@ -42,6 +42,29 @@ using Test
     end
 
     @testset "multiple" begin
+        x = collect(-10:10)
+        z = @. sqrt(x + 100)
+        data = DataFrame(x=x, z=z, y=randn(StableRNG(42), length(x)))
+        form = @formula(y ~ 1 + x * z)
+        data[!, :y] += modelmatrix(form, data) * beta
+        model = lm(form, data)
 
+        design = Dict(:x => 1:20)
+        maximin(v) = +(extrema(v)...) / 2
+        for typical in (maximin, mean)
+            eff = effects(design, @formula(y ~ x), model; typical=typical)
+            # test effect
+            z_typical = typical(z)
+            zx_typical = typical(z .* x)
+            bs = coef(model)
+            @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical + bs[4] * zx_typical
+            # test error
+            pred = [1 first(eff.x) z_typical zx_typical]
+            # if we drop support for Julia < 1.4, this first can become only
+            @test first(eff.err) ≈ first(sqrt(pred *  vcov(model) * pred'))
+            # test CI
+            @test eff.lower ≈ eff.y - eff.err
+            @test eff.upper ≈ eff.y + eff.err
+        end
     end
 end
