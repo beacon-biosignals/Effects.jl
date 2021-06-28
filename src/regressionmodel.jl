@@ -13,7 +13,7 @@ _vec(x) = [x]
 _vec(x::AbstractArray) = x
 
 """
-    effects!(reference_grid::DataFrame, formula::FormulaTerm,
+    effects!(reference_grid::Tables.ColumnTable, formula::FormulaTerm,
              model::RegressionModel;
              contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean)
 
@@ -128,6 +128,6 @@ function effects(design::NamedTuple, formula::FormulaTerm, model::RegressionMode
 end
 
 function effects(design::Dict, args...; kwargs...)
-    nt = (;design...)
+    nt = (; design...)
     return effects(nt, args...; kwargs...)
 end
