@@ -55,7 +55,7 @@ using Test
             eff = effects(design, @formula(y ~ x), model; typical=typical)
             # test effect
             z_typical = typical(z)
-            zx_typical = typical(z .* x)
+            zx_typical = z_typical .* typical(x)
             bs = coef(model)
             @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical + bs[4] * zx_typical
             # test error
