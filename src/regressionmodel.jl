@@ -72,6 +72,8 @@ function effects!(reference_grid::DataFrame, formula::FormulaTerm, model::Regres
     Xs = map(1:ncols) do idx
         if allcols[idx] in refcols
             return X[:, refcols .== Ref(allcols[idx])]
+        # XXX we need a third branch for interactions
+        # those should be assembled by multiplying the embedded lower-level terms
         else
             val = typical(modelmatrix(model)[:, idx])
             vec = Vector{Float64}(undef, nrows)
