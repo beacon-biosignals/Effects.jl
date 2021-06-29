@@ -56,7 +56,7 @@ The approach for computing effect is based on the effects plots described here:
 Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
-function effects!(reference_grid::Tables.ColumnTable, formula::FormulaTerm, model::RegressionModel;
+function effects!(reference_grid::DataFrame, formula::FormulaTerm, model::RegressionModel;
                   contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean)
     # right now this is written for a RegressionModel and implicitly assumes
     # no link function
@@ -82,7 +82,12 @@ function effects!(reference_grid::Tables.ColumnTable, formula::FormulaTerm, mode
     X = hcat(Xs...)
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
-    return (; reference_grid..., depvar => eff, err_col => err)
+    reference_grid[!, depvar] = eff
+    reference_grid[!, err_col] = err
+    return reference_grid
+    # XXX remove DataFrames dependency
+    # this doesn't work for a DataFrame and isn't mutating
+    # return (; reference_grid..., depvar => eff, err_col => err)
 end
 
 function _reference_grid(design, dv)
@@ -94,7 +99,7 @@ function _reference_grid(design, dv)
 end
 
 """
-    effects(design::Union{NamedTuple, Dict},
+    effects(design::Dict,
             formula::FormulaTerm,
             model::RegressionModel;
             contrasts=Dict{Symbol,Any}(),
@@ -111,23 +116,21 @@ is specified. This is then expanded into a reference grid representing a
 fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
-function effects(design::NamedTuple, formula::FormulaTerm, model::RegressionModel;
+function effects(design::Dict, formula::FormulaTerm, model::RegressionModel;
                  contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper)
+    # this is type restricted to Dict so that we can later have an
+    # effects(::ColumnTable) that does something similar to effects!(::DataFrame)
     dv = formula.lhs.sym
-    reference_grid = Tables.columntable(_reference_grid(design, dv))
+    reference_grid = DataFrame(_reference_grid(design, dv))
     reference_grid = effects!(reference_grid, formula, model; contrasts=contrasts,
                               err_col=err_col, typical=typical)
     # XXX DataFrames dependency
-    # reference_grid[!, lower_col] = reference_grid[!, dv] - reference_grid[!, err_col]
-    # reference_grid[!, upper_col] = reference_grid[!, dv] + reference_grid[!, err_col]
-    up_low = let dv = getproperty(reference_grid, dv), err = getproperty(reference_grid, err_col)
-        (; lower_col => dv .- err, upper_col => dv .+ err)
-    end
-    return (; reference_grid..., up_low...)
-end
-
-function effects(design::Dict, args...; kwargs...)
-    nt = (;design...)
-    return effects(nt, args...; kwargs...)
+    reference_grid[!, lower_col] = reference_grid[!, dv] - reference_grid[!, err_col]
+    reference_grid[!, upper_col] = reference_grid[!, dv] + reference_grid[!, err_col]
+    return reference_grid
+    # up_low = let dv = getproperty(reference_grid, dv), err = getproperty(reference_grid, err_col)
+    #     (; lower_col => dv .- err, upper_col => dv .+ err)
+    # end
+    # return (; reference_grid..., up_low...)
 end
