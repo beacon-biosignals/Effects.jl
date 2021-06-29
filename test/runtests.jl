@@ -50,7 +50,7 @@ using Test
         model = lm(form, data)
 
         design = Dict(:x => 1:20)
-        maximin(v) = +(extrema(v)...) / 2
+        maximin(v) = mean(extrema(v))
         for typical in (maximin, mean)
             eff = effects(design, @formula(y ~ x), model; typical=typical)
             # test effect
