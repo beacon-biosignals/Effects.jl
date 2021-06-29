@@ -13,7 +13,7 @@ _vec(x) = [x]
 _vec(x::AbstractArray) = x
 
 """
-    effects!(reference_grid::Tables.ColumnTable, formula::FormulaTerm,
+    effects!(reference_grid::DataFrame, formula::FormulaTerm,
              model::RegressionModel;
              contrasts=Dict{Symbol,Any}(), err_col=:err, typical=mean)
 
