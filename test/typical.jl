@@ -35,7 +35,7 @@ end
     @test_throws ArgumentError TypicalTerm(rhs.terms[1], [1,2,3,4])
 
     # categorical var with fewer levels in refgrid as in original
-    refgrid = _reference_grid(Dict(:x=>[13.0, 15.0], :z=>["C"]))
+    refgrid = _reference_grid(Dict(:x => [13.0, 15.0], :z => ["C"]))
     typicalf = typify(refgrid, f, X)
     # first column is the intercept
     # second column should be the x-values
@@ -47,7 +47,7 @@ end
                                                   1 15 0 1 0 15]
 
     # typical that isn't mean
-    refgrid = _reference_grid(Dict(:z=>["A", "B"]))
+    refgrid = _reference_grid(Dict(:z => ["A", "B"]))
     typicalf = typify(refgrid, f, X; typical=minimum)
     typx = minimum(dat.x)
     # first col is intercept
@@ -63,7 +63,7 @@ end
     f = apply_schema(form, schema(form, dat, Dict(:z => DummyCoding())))
     rhs = f.rhs
     y, X = modelcols(f, dat)
-    refgrid = _reference_grid(Dict(:x=>[π]))
+    refgrid = _reference_grid(Dict(:x => [π]))
     typicalf = typify(refgrid, f, X)
     # first col is intercept
     # second col is 3.14
@@ -78,6 +78,6 @@ end
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
     y, X = modelcols(f, dat)
-    refgrid = _reference_grid(Dict(:x=>[π]))
+    refgrid = _reference_grid(Dict(:x => [π]))
     @test_throws ArgumentError typify(refgrid, f, X)
 end
