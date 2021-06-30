@@ -32,6 +32,20 @@ end
     y, X = modelcols(f, dat)
     @test_throws ArgumentError TypicalTerm(rhs.terms[1], [1, 2, 3, 4])
 
+    @test !StatsModels.needs_schema(TypicalTerm(rhs.terms[1], 1))
+
+    for term in rhs.terms
+        w = width(term)
+        typ = TypicalTerm(term, ones(w))
+
+        @test width(typ) == w
+        @test coefnames(typ) == coefnames(term)
+        @test sprint(show, typ) == sprint(show, term)
+        mime = MIME("text/plain")
+        @test sprint(show, mime, typ) == sprint(show, mime, term)
+        @test StatsModels.termsyms(typ) == StatsModels.termsyms(term)
+    end
+
     # categorical var with fewer levels in refgrid as in original
     refgrid = _reference_grid(Dict(:x => [13.0, 15.0], :z => ["C"]))
     typicalf = typify(refgrid, f, X)
