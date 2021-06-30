@@ -20,7 +20,7 @@ using AlgebraOfGraphics, CairoMakie, DataFrames, Effects, GLM, StatsModels, Stab
 rng = StableRNG(42)
 reps = 5
 sd = 50
-wtdat = DataFrame(; feed = repeat(["A", "B", "C"], inner=reps),
+wtdat = DataFrame(; feed=repeat(["A", "B", "C"], inner=reps),
                   weight=[180 .+ sd*randn(rng, reps);
                           220 .+ sd*randn(rng, reps);
                           300 .+ sd*randn(rng, reps)])
@@ -46,7 +46,7 @@ In spite of these differences, these models make the same predictions about the 
 response(mod_treat) ≈ response(mod_eff)
 ```
 
-At a deep level, these models are the actually same model, but with different parameterizations. In order to get a better view about what a model is saying about the data, abstracted away from the parameterization, we can see what the model looks like in data space. For that, we can use `Efffects.jl` to generate the *effects* that the model is capturing. We do this by specifying a (subset of the) design and creating a reference grid, then computing the model's prediction and associated error at those values.
+At a deep level, these models are the actually same model, but with different parameterizations. In order to get a better view about what a model is saying about the data, abstracted away from the parameterization, we can see what the model looks like in data space. For that, we can use Effects.jl to generate the *effects* that the model is capturing. We do this by specifying a (subset of the) design and creating a reference grid, then computing the model's prediction and associated error at those values.
 
 The `effects` function will compute the reference grid for a crossed design specified by a dictionary of values. As we only have one predictor in this dataset, the design is completely crossed.
 
@@ -108,7 +108,7 @@ Is this model just a poor fit to the data? We can plot the effects and see that'
 ```@example centering
 refgrid = copy(growthdata)
 filter!(refgrid) do row
-  return mod(row.age, 2) == (row.sex == "male")
+    return mod(row.age, 2) == (row.sex == "male")
 end
 effects!(refgrid, mod_uncentered)
 ```
@@ -154,7 +154,7 @@ plt = data(refgrid_centered) * mapping(:age, :weight; lower=:lower, upper=:upper
 draw(plt)
 ```
 
-Understanding lower-level terms in the presence of interactions can be particularly tricky, and effect plots are also useful for this. For example, if we want to examine the effect of `sex` at a *typical*  `age`, then we would need some way to reduce `age` to `typical` values. By default, `effects[!]` will take use the mean of all model terms not specified in the effects formula as representative values. Looking at `sex`, we see that
+Understanding lower-level terms in the presence of interactions can be particularly tricky, and effect plots are also useful for this. For example, if we want to examine the effect of `sex` at a *typical* `age`, then we would need some way to reduce `age` to `typical` values. By default, `effects[!]` will take use the mean of all model terms not specified in the effects formula as representative values. Looking at `sex`, we see that
 
 ```@example centering
 design = Dict(:sex => unique(growthdata.sex))
