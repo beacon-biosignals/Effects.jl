@@ -11,6 +11,6 @@ makedocs(modules=[Effects],
          pages=["Home" => "index.md",
                 "API" => "api.md"])
 
-deploydocs(; repo = "github.com/beacon-biosignals/Effects.jl/",
+deploydocs(; repo="github.com/beacon-biosignals/Effects.jl/",
            devbranch="main",
-           push_preview = true)
+           push_preview=true)
