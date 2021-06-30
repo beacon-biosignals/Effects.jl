@@ -66,12 +66,13 @@ function typify(refgrid::DataFrame, model_formula::FormulaTerm,
 end
 
 _replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_term.terms, Ref(typicals)))
-_replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? TypicalTerm(term, typicals[term]) : term
+_replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
 _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term.terms, Ref(typicals)))
 
 function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean)
     i = findfirst(t -> StatsModels.symequal(t, term), context.terms)
     i === nothing && throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
     cols = (i == 1 ? 0 : sum(width, context.terms[1:i-1])) .+ (1:width(term))
-    return map(typical, eachcol(view(model_matrix, :, cols)))
+    vals = map(typical, eachcol(view(model_matrix, :, cols)))
+    return TypicalTerm(term, vals)
 end
