@@ -195,7 +195,6 @@ effects(Dict(:age => [15]), mod_imbalance; typical=mode)
 Note that these should be scalar valued functions, so we can use `minimum` or `maximum` but not `extrema`:
 
 ```@example centering
-using StatsBase
 effects(Dict(:sex => ["female", "male"]), mod_imbalance; typical=maximum)
 ```
 
