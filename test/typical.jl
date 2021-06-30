@@ -72,4 +72,12 @@ end
     # fifth col is the product of the cols 2&3
     # sixt col is the product of the cols 2&4
     @test modelcols(typicalf, refgrid) ≈ Float64[1 π 1/3 1/3 π/3 π/3]
+
+    # weird models
+    form = @formula(y ~ 0 + x + x & z)
+    f = apply_schema(form, schema(form, dat))
+    rhs = f.rhs
+    y, X = modelcols(f, dat)
+    refgrid = _reference_grid(Dict(:x=>[π]))
+    @test_throws ArgumentError typify(refgrid, f, X)
 end
