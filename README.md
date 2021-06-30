@@ -8,8 +8,8 @@ Effects Prediction for Linear and Generalized Linear models
 
 [build-img]: https://github.com/beacon-biosignals/Effects.jl/workflows/CI/badge.svg
 [build-url]: https://github.com/beacon-biosignals/Effects.jl/actions
-[codecov-img]: https://codecov.io/github/beacon-biosignals/Effects.jl/badge.svg?branch=main
-[codecov-url]: https://codecov.io/github/beacon-biosignals/Effects.jl?branch=main
+[codecov-img]: https://codecov.io/gh/beacon-biosignals/Effects.jl/badge.svg?branch=main
+[codecov-url]: https://codecov.io/gh/beacon-biosignals/Effects.jl?branch=main
 
 Regression is a foundational technique of statistical analysis, and many common statistical tests are based on regression models (e.g., ANOVA, t-test, correlation tests, etc.).
 Despite the expressive power of regression models, users often prefer the simpler procedures because regression models themselves can be difficult to interpret.
