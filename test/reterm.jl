@@ -7,7 +7,6 @@ using StatsModels: Schema
 
 abstract type FakeMixed end
 
-
 struct RandomEffectsTerm <: AbstractTerm
     lhs::StatsModels.TermOrTerms
     rhs::StatsModels.TermOrTerms
@@ -20,8 +19,9 @@ end
 Base.:|(a::StatsModels.TermOrTerms, b::StatsModels.TermOrTerms) = RandomEffectsTerm(a, b)
 
 # expand (lhs | a + b) to (lhs | a) + (lhs | b)
-RandomEffectsTerm(lhs::StatsModels.TermOrTerms, rhs::NTuple{2,AbstractTerm}) =
-    (RandomEffectsTerm(lhs, rhs[1]), RandomEffectsTerm(lhs, rhs[2]))
+function RandomEffectsTerm(lhs::StatsModels.TermOrTerms, rhs::NTuple{2,AbstractTerm})
+    return (RandomEffectsTerm(lhs, rhs[1]), RandomEffectsTerm(lhs, rhs[2]))
+end
 
 Base.show(io::IO, t::RandomEffectsTerm) = Base.show(io, MIME"text/plain"(), t)
 
@@ -47,7 +47,9 @@ function StatsModels.apply_schema(t::FunctionTerm{typeof(|)},
 end
 
 # allowed types (or tuple thereof) for blocking variables (RHS of |):
-const GROUPING_TYPE = Union{<:CategoricalTerm, <:InteractionTerm{<:NTuple{N,CategoricalTerm} where {N}}}
+const GROUPING_TYPE = Union{<:CategoricalTerm,
+                            <:InteractionTerm{<:NTuple{N,CategoricalTerm} where {N}}}
+
 check_re_group_type(term::GROUPING_TYPE) = true
 check_re_group_type(terms::Tuple{Vararg{<:GROUPING_TYPE}}) = true
 check_re_group_type(x) = false
@@ -59,12 +61,10 @@ function StatsModels.apply_schema(t::RandomEffectsTerm,
     lhs, rhs = t.lhs, t.rhs
 
     # handle intercept in LHS (including checking schema for intercept in another term)
-    if (
-        !StatsModels.hasintercept(lhs) &&
+    if !StatsModels.hasintercept(lhs) &&
         !StatsModels.omitsintercept(lhs) &&
         ConstantTerm(1) ∉ schema.already &&
         InterceptTerm{true}() ∉ schema.already
-    )
         lhs = InterceptTerm{true}() + lhs
     end
 

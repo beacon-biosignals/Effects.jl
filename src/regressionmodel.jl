@@ -1,7 +1,6 @@
 """
-    effects!(reference_grid::DataFrame,  model::RegressionModel;
-              eff_col=nothing, err_col=:err, typical=mean)
-
+    effects!(reference_grid::DataFrame, model::RegressionModel;
+             eff_col=nothing, err_col=:err, typical=mean)
 
 Compute the `effects` as specified in `formula`.
 
@@ -63,12 +62,11 @@ function _reference_grid(design)
 end
 
 """
-    effects(design::Dict, model::RegressionModel;
+    effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
             lower_col=:lower, upper_col=:upper)
 
-
-Compute the `effects` as specified by the `deisgn`.
+Compute the `effects` as specified by the `design`.
 
 This is a convenience wrapper for [`effects!`](@ref). Instead of specifying a
 reference grid, a dictionary containing the levels/values of each predictor
@@ -76,7 +74,7 @@ is specified. This is then expanded into a reference grid representing a
 fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
-function effects(design::Dict, model::RegressionModel;
+function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper)
     grid = _reference_grid(design)
