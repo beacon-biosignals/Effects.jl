@@ -8,9 +8,12 @@ using StatsModels
 using StatsBase
 using Tables
 
+using StatsModels: AbstractTerm
+
 export effects
 export effects!
 
+include("typical.jl")
 include("regressionmodel.jl")
 
 end # module
