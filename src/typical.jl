@@ -33,8 +33,8 @@ end
 StatsBase.coefnames(t::TypicalTerm) = coefnames(t.term)
 # regular show
 Base.show(io::IO, t::TypicalTerm) = show(io, t.term)
-# long show is regular show
-Base.show(io::IO, ::MIME"text/plain", t::TypicalTerm) = show(io, t)
+# long show
+Base.show(io::IO, m::MIME"text/plain", t::TypicalTerm) = show(io, m, t.term)
 
 # statsmodels glue code:
 StatsModels.width(t::TypicalTerm) = StatsModels.width(t.term)
