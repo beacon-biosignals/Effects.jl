@@ -13,8 +13,8 @@ using Test
 
     @testset "simple" begin
         x = collect(-10:10)
-        data = (; :x => x, :y => x .* b1 .+ b0 + randn(StableRNG(42), length(x)))
-        model = lm(@formula(y ~ x), data)
+        dat = DataFrame(; x=x, y = x .* b1 .+ b0 + randn(StableRNG(42), length(x)))
+        model = lm(@formula(y ~ x), dat)
 
         design = Dict(:x => 1:20)
         eff = effects(design, @formula(y ~ x), model)
