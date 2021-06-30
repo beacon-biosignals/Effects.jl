@@ -13,7 +13,7 @@ dat = DataFrame(; x=x,
                 y=zeros(length(x)))
 
 @testset "get_matrix_term" begin
-    form = @formula(y ~ 1 + x + (1|z))
+    form = @formula(y ~ 1 + x + (1 | z))
     f = apply_schema(form, schema(form, dat, Dict(:z => EffectsCoding())), MixedModel)
     rhs = f.rhs
     y, XZ = modelcols(f, dat)
@@ -30,7 +30,7 @@ end
     f = apply_schema(form, schema(form, dat, Dict(:z => EffectsCoding())))
     rhs = f.rhs
     y, X = modelcols(f, dat)
-    @test_throws ArgumentError TypicalTerm(rhs.terms[1], [1,2,3,4])
+    @test_throws ArgumentError TypicalTerm(rhs.terms[1], [1, 2, 3, 4])
 
     # categorical var with fewer levels in refgrid as in original
     refgrid = _reference_grid(Dict(:x => [13.0, 15.0], :z => ["C"]))
