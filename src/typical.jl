@@ -78,5 +78,6 @@ function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typi
     i === nothing && throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
     cols = (i == 1 ? 0 : sum(width, context.terms[1:(i - 1)])) .+ (1:width(term))
     vals = map(typical, eachcol(view(model_matrix, :, cols)))
+    all(v -> length(v) == 1, vals) || throw(ArgumentError("Typical function should return a scalar."))
     return TypicalTerm(term, vals)
 end

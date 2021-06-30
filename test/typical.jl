@@ -46,6 +46,8 @@ end
 
     # typical that isn't mean
     refgrid = _reference_grid(Dict(:z => ["A", "B"]))
+    # typical should return a scalar
+    @test_throws ArgumentError typify(refgrid, f, X; typical=extrema)
     typicalf = typify(refgrid, f, X; typical=minimum)
     typx = minimum(dat.x)
     # first col is intercept
@@ -56,7 +58,6 @@ end
     # sixt col is the product of the cols 2&4
     @test modelcols(typicalf, refgrid) == Float64[1 typx -1 -1 -typx  -typx
                                                   1 typx  1  0  typx      0]
-
     # typical of categorical vars
     f = apply_schema(form, schema(form, dat, Dict(:z => DummyCoding())))
     rhs = f.rhs

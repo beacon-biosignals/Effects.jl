@@ -191,3 +191,15 @@ Finally, we note that the user can specify alternative functions for computing t
 using StatsBase
 effects(Dict(:age => [15]), mod_imbalance; typical=mode)
 ```
+
+Note that these should be scalar valued functions, so we can use `minimum` or `maximum` but not `extrema`:
+
+```@example centering
+using StatsBase
+effects(Dict(:sex => ["female", "male"]), mod_imbalance; typical=maximum)
+```
+
+```@example centering
+using Test
+@test_throws ArgumentError effects(Dict(:sex => ["female", "male"]), mod_imbalance; typical=extrema)
+```
