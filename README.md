@@ -10,3 +10,10 @@ Effects Prediction for Linear and Generalized Linear models
 [build-url]: https://github.com/beacon-biosignals/Effects.jl/actions
 [codecov-img]: https://codecov.io/github/beacon-biosignals/Effects.jl/badge.svg?branch=main
 [codecov-url]: https://codecov.io/github/beacon-biosignals/Effects.jl?branch=main
+
+Regression is a foundational technique of statistical analysis, and many common statistical tests are based on regression models (e.g., ANOVA, t-test, correlation tests, etc.).
+Despite the expressive power of regression models, users often prefer the simpler procedures because regression models themselves can be difficult to interpret.
+Most notably, the interpretation of individual regression coefficients (including their magnitude, sign, and even significance) changes depending on the presence or even centering/contrast coding of other terms or interactions.
+For instance, a common source of confusion in regression analysis is the meaning of the intercept coefficient. On its own, this coefficient corresponds to the grand mean of the independent variable, but in the presence of a contrast-coded categorical variable, it can correspond to the mean of the baseline level of that variable, the grand mean, or something else altogether, depending on the contrast coding scheme that is used.
+Effects.jl provides a general-purpose tool for interpreting fitted regression models by projecting the effects of one or more terms in the model back into "data space", along with the associated uncertainty, fixing other the value of other terms at typical or user-specified values.
+This makes it straightforward to interrogate the estimated effects of any predictor at any combination of other predictors' values. Because these effects are computed in data space, they can be plotted in parallel format to raw or aggregated data, enabling intuitive model interpretation and sanity checks.
