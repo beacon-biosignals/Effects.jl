@@ -7,7 +7,7 @@ formula replacing all the terms with their "typified" version where available.
 then we call modelcols using this new formula + the reference grid (from the
 design)
 
-=# 
+=#
 
 struct TypicalTerm{T,V} <: AbstractTerm
     term::T
@@ -19,6 +19,26 @@ struct TypicalTerm{T,V} <: AbstractTerm
     end
 end
 
+function StatsModels.modelcols(t::TypicalTerm, d::NamedTuple)
+    cols = ones(length(first(d)), width(t))
+    for (idx, v) in enumerate(t.values)
+        cols[:, idx] .*= v
+    end
+    return cols
+end
+
+StatsBase.coefnames(t::TypicalTerm) = coefnames(t.term)
+# regular show
+Base.show(io::IO, t::TypicalTerm) = show(io, t.term)
+# long show is regular show
+Base.show(io::IO, ::MIME"text/plain", t::TypicalTerm) = show(io, t)
+
+# statsmodels glue code:
+StatsModels.width(t::TypicalTerm) = StatsModels.width(t.term)
+# don't generate schema entries for terms which are already typified
+StatsModels.needs_schema(::TypicalTerm) = false
+StatsModels.termsyms(t::TypicalTerm) = StatsModels.termsyms(t.term)
+
 function get_matrix_term(x)
     x = StatsModels.collect_matrix_terms(x)
     x = x isa MatrixTerm ? x : first(x)
@@ -26,19 +46,20 @@ function get_matrix_term(x)
     return x
 end
 
-function typify(effects_formula::FormulaTerm, model_formula::FormulaTerm, model_matrix::AbstractMatrix)
+function typify(refgrid::DataFrame, model_formula::FormulaTerm,
+                model_matrix::AbstractMatrix; typical=mean)
     model_terms = terms(model_formula)
 
-    effects_terms = terms(effects_formula)
+    effects_terms = Term.(propertynames(refgrid))
 
     # creates a MatrixTerm (and should work for things like MixedModels) which
-    # shoudl correspond to the model_matrix
-    matrix_term = get_matrix_term(model_formula)
+    # should correspond to the model_matrix
+    matrix_term = get_matrix_term(model_formula.rhs)
 
     typical_terms = Dict()
-    for term in terms(matrix_terms)
+    for term in terms(matrix_term)
         if !any(et -> StatsModels.symequal(et, term), effects_terms)
-            typical_terms[term] = typical(term, matrix_term, model_matrix)
+            typical_terms[term] = typicalterm(term, matrix_term, model_matrix)
         end
     end
 
@@ -46,13 +67,12 @@ function typify(effects_formula::FormulaTerm, model_formula::FormulaTerm, model_
 end
 
 _replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_term.terms, Ref(typicals)))
-_replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
+_replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? TypicalTerm(term, typicals[term]) : term
 _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term.terms, Ref(typicals)))
 
-function typical(term::AbsractTerm, context::MatrixTerm, model_matrix; typical=mean)
+function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean)
     i = findfirst(t -> StatsModels.symequal(t, term), context.terms)
     i === nothing && throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
-    cols = sum(width, context.terms[1:i-1]) .+ (1:width(term))
+    cols = (i == 1 ? 0 : sum(width, context.terms[1:i-1])) .+ (1:width(term))
     return map(typical, eachcol(view(model_matrix, :, cols)))
 end
-
