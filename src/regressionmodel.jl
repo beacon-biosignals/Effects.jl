@@ -57,11 +57,9 @@ end
 
 function _reference_grid(design)
     colnames = tuple(keys(design)...)
-    rowtab = map(product(values(design)...)) do row
-        return NamedTuple{colnames}(row...)
-    end
+    rowtab = NamedTuple{colnames}.(product(values(design)...))
 
-    return DataFrame(rowtab)
+    return DataFrame(vec(rowtab))
 end
 
 """
