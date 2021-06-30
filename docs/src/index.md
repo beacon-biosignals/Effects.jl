@@ -88,9 +88,9 @@ but by age 20 the median male weighs around 155 pounds while the median female
 weighs around 125 pounds.
 
 ```@example centering
-using AlgebraOfGraphics, CairoMakie, DataFrames, Effects, GLM, StatsModels, Random
-rng = MersenneTwister(42)
-growthdata = DataFrame(age=[13:20; 13:20],
+using AlgebraOfGraphics, CairoMakie, DataFrames, Effects, GLM, StatsModels, StableRNGs
+rng = StableRNG(42)
+growthdata = DataFrame(; age=[13:20; 13:20],
                        sex=repeat(["male", "female"], inner=8),
                        weight=[range(100, 155; length=8); range(100, 125; length=8)] .+ randn(rng, 16))
 ```
@@ -110,13 +110,13 @@ refgrid = copy(growthdata)
 filter!(refgrid) do row
   return mod(row.age, 2) == (row.sex == "male")
 end
-effects!(refgrid, @formula(weight ~ 1 + sex * age), mod_uncentered)
+effects!(refgrid, mod_uncentered)
 ```
 
 Note that the column corresponding to the response variable `weight` has been overwritten with the effects prediction and that only the standard error is provided: the [`effects!`](@ref) method does less work than the [`effects`](@ref) convenience method.
 
 We can add the confidence interval bounds in and plot our predictions:
-```@example contrasts
+```@example centering
 refgrid[!, :lower] = @. refgrid.weight - 1.96 * refgrid.err
 refgrid[!, :upper] = @. refgrid.weight + 1.96 * refgrid.err
 sort!(refgrid, [:age])
@@ -128,7 +128,7 @@ draw(plt)
 
 We can also add in the raw data to check the model fit:
 
-```@example contrasts
+```@example centering
 draw(plt + data(growthdata) * mapping(:age, :weight; color=:sex) * visual(Scatter))
 ```
 
@@ -144,7 +144,7 @@ All of the estimates have now changed because the parameterization is completely
 
 ```@example centering
 refgrid_centered = copy(growthdata)
-effects!(refgrid_centered, @formula(weight ~ 1 + sex * age), mod_centered; contrasts=contrasts)
+effects!(refgrid_centered, mod_centered)
 refgrid_centered[!, :lower] = @. refgrid_centered.weight - 1.96 * refgrid_centered.err
 refgrid_centered[!, :upper] = @. refgrid_centered.weight + 1.96 * refgrid_centered.err
 sort!(refgrid_centered, [:age])
@@ -158,11 +158,36 @@ Understanding lower-level terms in the presence of interactions can be particula
 
 ```@example centering
 design = Dict(:sex => unique(growthdata.sex))
-effects(design,  @formula(weight ~ 1 + sex), mod_uncentered)
+effects(design, mod_uncentered)
 ```
 
-correspond to the model's estimate of weights for each sex at the average age in the dataset. (Note that this is not quite the same as the average weight of each sex across all ages.) Like all effects predictions, this is invariant to contrast coding:
+correspond to the model's estimate of weights for each sex at the average age in the dataset. Like all effects predictions, this is invariant to contrast coding:
 
 ```@example centering
-effects(design,  @formula(weight ~ 1 + sex), mod_centered; contrasts=contrasts)
+effects(design, mod_centered)
+```
+
+## Categorical Variables and Typical Values
+
+We can also compute effects for the different ages at typical values of `sex` for this dataset. For categorical variables, the typical values are computed on the contrasts themselves. For balanced datasets and the default use of the mean as typical values, this reflects the average across all levels of the categorical variable.
+
+For our model using the centered parameterization and effects coding, the effect at the center (`age = 15`) at typical values of `sex` is simply the intercept: the mean weight across both sexes at age 15.
+```@example centering
+effects(Dict(:age => [15]), mod_centered)
+```
+
+If we had an imbalanced dataset, then averaging across all values of the contrasts would be weighted towards the levels (here: sex) with more observations. This makes sense: the category with more observations is in some sense more "typical" for that dataset.
+
+```@example centering
+# create imbalance
+growthdata2 = growthdata[5:end, :]
+mod_imbalance = lm(@formula(weight ~ 1 + sex * age), growthdata2; contrasts=contrasts)
+effects(Dict(:age => [15]), mod_imbalance)
+```
+
+Finally, we note that the user can specify alternative functions for computing the typical values. For example, specifying the `mode` for the imbalanced dataset results in effects estimates for the most frequent level of `sex`, i.e. `female`:
+
+```@example centering
+using StatsBase
+effects(Dict(:age => [15]), mod_imbalance; typical=mode)
 ```
