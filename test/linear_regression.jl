@@ -22,7 +22,7 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
     # test error
     pred = [1 first(eff.x)]
     # if we drop support for Julia < 1.4, this first can become only
-    @test first(eff.err) ≈ first(sqrt(pred *  vcov(model) * pred'))
+    @test first(eff.err) ≈ first(sqrt(pred * vcov(model) * pred'))
     # test CI
     @test eff.lower ≈ eff.y - eff.err
     @test eff.upper ≈ eff.y + eff.err
@@ -60,7 +60,7 @@ end
         @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical + bs[4] * zx_typical
         # test error
         pred = [intercept eff.x z_typical zx_typical]
-        @test eff.err ≈ sqrt.(diag(pred *  vcov(model) * pred'))
+        @test eff.err ≈ sqrt.(diag(pred * vcov(model) * pred'))
         # test CI
         @test eff.lower ≈ eff.y - eff.err
         @test eff.upper ≈ eff.y + eff.err
