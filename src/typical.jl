@@ -58,7 +58,7 @@ function typify(refgrid::DataFrame, model_formula::FormulaTerm,
     typical_terms = Dict()
     for term in terms(matrix_term)
         if !any(et -> StatsModels.symequal(et, term), effects_terms)
-            typical_terms[term] = typicalterm(term, matrix_term, model_matrix)
+            typical_terms[term] = typicalterm(term, matrix_term, model_matrix; typical=typical)
         end
     end
 
