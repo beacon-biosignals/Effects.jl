@@ -1,8 +1,10 @@
-# using Distributions
 using DataFrames
 using Effects
 using GLM
 using StableRNGs
+using StandardizedPredictors
+using Statistics
+using StatsModels
 using Test
 
 @testset "linear regression" begin
@@ -11,11 +13,11 @@ using Test
 
     @testset "simple" begin
         x = collect(-10:10)
-        data = (; :x => x, :y => x .* b1 .+ b0 + randn(StableRNG(42), length(x)))
-        model = lm(@formula(y ~ x), data)
+        dat = (; :x => x, :y => x .* b1 .+ b0 + randn(StableRNG(42), length(x)))
+        model = lm(@formula(y ~ x), dat)
 
         design = Dict(:x => 1:20)
-        eff = effects(design, @formula(y ~ x), model)
+        eff = effects(design, model)
         # test effect
         @test eff.y ≈ eff.x .* last(coef(model)) .+ first(coef(model))
         # test error
@@ -25,6 +27,19 @@ using Test
         # test CI
         @test eff.lower ≈ eff.y - eff.err
         @test eff.upper ≈ eff.y + eff.err
+
+        @testset "contrasts" begin
+            contrasts = Dict(:x => Center(10))
+            model_centered = lm(@formula(y ~ x), dat; contrasts=contrasts)
+
+            eff_centered = effects(design, model_centered)
+
+            # different contrasts shouldn't affect the predictions/effects
+            @test eff_centered.y ≈ eff.y
+            @test eff_centered.lower ≈ eff.lower
+            @test eff_centered.upper ≈ eff.upper
+        end
+
     end
 
     @testset "multiple" begin
