@@ -1,4 +1,5 @@
-# this is adapated from MixedModels.jl @9d2b965
+# this is adapted from MixedModels.jl @9d2b965
+# (not a problem under the MIT license of that and this package)
 # easier to include this one file for testing than to
 # add a heavyweight testing dependency
 
@@ -12,10 +13,8 @@ struct RandomEffectsTerm <: AbstractTerm
     rhs::StatsModels.TermOrTerms
 end
 
-# TODO: consider overwriting | with our own function that can be
-# imported with (a la FilePathsBase.:/)
-# using MixedModels: |
-# to avoid conflicts with definitions in other packages...
+# type piracy in tests; not exported and this is to test compat with MixedModels
+# without requiring a heavyweight dependency in the tests.
 Base.:|(a::StatsModels.TermOrTerms, b::StatsModels.TermOrTerms) = RandomEffectsTerm(a, b)
 
 # expand (lhs | a + b) to (lhs | a) + (lhs | b)
