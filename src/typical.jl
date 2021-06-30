@@ -45,11 +45,11 @@ function get_matrix_term(x)
     return x
 end
 
-function typify(refgrid::DataFrame, model_formula::FormulaTerm,
+function typify(refgrid, model_formula::FormulaTerm,
                 model_matrix::AbstractMatrix; typical=mean)
     model_terms = terms(model_formula)
 
-    effects_terms = Term.(propertynames(refgrid))
+    effects_terms = Term.(Tables.columnnames(refgrid))
 
     # creates a MatrixTerm (and should work for things like MixedModels) which
     # should correspond to the model_matrix

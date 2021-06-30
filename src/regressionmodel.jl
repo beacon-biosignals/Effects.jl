@@ -10,7 +10,7 @@ grid. For terms present in the model, but not in the reference grid, then
 the typical value of those predictors is used. (In other words, effects are
 conditional on the typical value.) The function for computing typical values
 is specified via `typical`. Note that this is also applied to categorical contrasts,
-thus yielding anaverage of the contrast, weighted by the balance of levels in the data
+thus yielding an average of the contrast, weighted by the balance of levels in the data
 set used to fit the model.
 
 By default, the column corresponding to the response variable in the formula
@@ -39,7 +39,7 @@ Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
-                   eff_col=nothing, err_col=:err, typical=mean)
+                  eff_col=nothing, err_col=:err, typical=mean)
     # right now this is written for a RegressionModel and implicitly assumes
     # no link function and the existence of an appropriate formula method
     form = formula(model)
