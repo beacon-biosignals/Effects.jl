@@ -1,6 +1,7 @@
 using DataFrames
 using Effects
 using GLM
+using LinearAlgebra
 using StableRNGs
 using StandardizedPredictors
 using Statistics
@@ -55,16 +56,16 @@ end
         design = Dict(:x => 1:20)
         maximin(v) = mean(extrema(v))
         for typical in (maximin, mean)
-            eff = effects(design, @formula(y ~ x), model; typical=typical)
+            eff = effects(design, model; typical=typical)
             # test effect
-            z_typical = typical(z)
-            zx_typical = z_typical .* typical(x)
+            intercept = ones(length(design[:x]))
+            z_typical = typical(z) * intercept
+            zx_typical = z_typical .* design[:x]
             bs = coef(model)
             @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical + bs[4] * zx_typical
             # test error
-            pred = [1 first(eff.x) z_typical zx_typical]
-            # if we drop support for Julia < 1.4, this first can become only
-            @test first(eff.err) ≈ first(sqrt(pred *  vcov(model) * pred'))
+            pred = [intercept eff.x z_typical zx_typical]
+            @test eff.err ≈ sqrt.(diag(pred *  vcov(model) * pred'))
             # test CI
             @test eff.lower ≈ eff.y - eff.err
             @test eff.upper ≈ eff.y + eff.err
