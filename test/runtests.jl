@@ -7,6 +7,10 @@ using Statistics
 using StatsModels
 using Test
 
+@testset "TypicalTerm" begin
+    include("typical.jl")
+end
+
 @testset "linear regression" begin
 
     b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
