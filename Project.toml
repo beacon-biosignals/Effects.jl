@@ -19,7 +19,7 @@ GLM = "1.3"
 StableRNGs = "1.0"
 StandardizedPredictors = "0.1"
 StatsBase = "0.33"
-StatsModels = "0.6.20"
+StatsModels = "0.6.23"
 Tables = "1"
 julia = "1"
 
