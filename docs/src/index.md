@@ -21,9 +21,9 @@ rng = StableRNG(42)
 reps = 5
 sd = 50
 wtdat = DataFrame(; feed=repeat(["A", "B", "C"], inner=reps),
-                  weight=[180 .+ sd*randn(rng, reps);
-                          220 .+ sd*randn(rng, reps);
-                          300 .+ sd*randn(rng, reps)])
+                  weight=[180 .+ sd * randn(rng, reps);
+                          220 .+ sd * randn(rng, reps);
+                          300 .+ sd * randn(rng, reps)])
 ```
 
 If we fit a linear model to this data using default treatment/dummy coding, then the coefficient corresponding of feed `C` is significant.
