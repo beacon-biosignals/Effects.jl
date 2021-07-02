@@ -20,7 +20,12 @@ dat = DataFrame(; x=x,
     # test that we created an additional model matrix full of -0.0
     @test last(XZ) isa ReMat
     @test !(first(XZ) isa ReMat)
-    mc = modelcols(get_matrix_term(rhs), dat)
+
+    trm = first(form.rhs)
+    materm = get_matrix_term(rhs)
+    mc = modelcols(materm, dat)
+    # this tests that we're fully extracting the nested MatrixTerm
+    @test typicalterm(trm, materm, mc) isa TypicalTerm
     # test that the matrix term corresponds to the term we expect
     @test mc == first(XZ)
 end
