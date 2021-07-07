@@ -1,5 +1,6 @@
 using DataFrames
 using Effects
+using StatsBase
 using StatsModels
 using MixedModels: MixedModel, ReMat
 using Test
@@ -9,6 +10,7 @@ using Effects: _reference_grid
 
 x = collect(-10:19)
 dat = DataFrame(; x=x,
+                w = exp.(x),
                 z=repeat(["A", "B", "C"]; inner=10),
                 y=zeros(length(x)))
 
@@ -98,4 +100,17 @@ end
     y, X = modelcols(f, dat)
     refgrid = _reference_grid(Dict(:x => [π]))
     @test_throws ArgumentError typify(refgrid, f, X)
+end
+
+@testset "functionterm" begin
+    form = @formula(y ~ 0 + x + log(w) + sqrt(w) + w)
+    f = apply_schema(form, schema(form, dat))
+    rhs = f.rhs
+
+    X = modelcols(rhs, dat)
+    refgrid = _reference_grid(Dict(:x => [π]))
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w)) mean(dat.w)]
+
+    refgrid = _reference_grid(Dict(:x => [π], :w => [π]))
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π) π]
 end
