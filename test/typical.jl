@@ -102,15 +102,17 @@ end
     @test_throws ArgumentError typify(refgrid, f, X)
 end
 
-@testset "functionterm" begin
-    form = @formula(y ~ 0 + x + log(w) + sqrt(w) + w)
+@testset "FunctionTerm" begin
+    # no untransformed w here -- we want to make sure we don't try
+    # to grab the nonexistent column corresponding to untransformed w
+    form = @formula(y ~ 0 + x + log(w) + sqrt(w))
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
     X = modelcols(rhs, dat)
     refgrid = _reference_grid(Dict(:x => [π]))
-    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w)) mean(dat.w)]
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w))]
     refgrid = _reference_grid(Dict(:x => [π], :w => [π]))
-    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π) π]
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π)]
 
     form = @formula(y ~ 0 + x + x^2 + x^3)
     f = apply_schema(form, schema(form, dat))
