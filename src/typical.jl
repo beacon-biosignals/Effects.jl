@@ -68,7 +68,6 @@ function typify(refgrid, model_formula::FormulaTerm,
             typical_terms[term] = typicalterm(term, matrix_term, model_matrix; typical=typical)
         end
     end
-
     return _replace(matrix_term, typical_terms)
 end
 
@@ -77,7 +76,8 @@ _replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals
 _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term.terms, Ref(typicals)))
 
 _termsyms(t) = StatsModels.termsyms(t)
-_termsyms(t::FunctionTerm) = Set(_termsyms.(t.args_parsed)...)
+_termsyms(t::FunctionTerm) = _rmliterals(union(_termsyms.(t.args_parsed)...))
+_rmliterals(s) = filter(x -> !isa(x, Number), s)
 _symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
 
 _trmequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))

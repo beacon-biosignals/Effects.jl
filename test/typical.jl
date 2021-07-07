@@ -106,11 +106,16 @@ end
     form = @formula(y ~ 0 + x + log(w) + sqrt(w) + w)
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
-
     X = modelcols(rhs, dat)
     refgrid = _reference_grid(Dict(:x => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w)) mean(dat.w)]
-
     refgrid = _reference_grid(Dict(:x => [π], :w => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π) π]
+
+    form = @formula(y ~ 0 + x + x^2 + x^3)
+    f = apply_schema(form, schema(form, dat))
+    rhs = f.rhs
+    X = modelcols(rhs, dat)
+    refgrid = _reference_grid(Dict(:x => [π]))
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π π^2 π^3]
 end
