@@ -54,17 +54,24 @@ end
 
 function typify(refgrid, model_formula::FormulaTerm,
                 model_matrix::AbstractMatrix; typical=mean)
-    model_terms = terms(model_formula)
-
     effects_terms = Term.(Tables.columnnames(refgrid))
 
     # creates a MatrixTerm (and should work for things like MixedModels) which
     # should correspond to the model_matrix
     matrix_term = get_matrix_term(model_formula.rhs)
-
     typical_terms = Dict()
-    for term in terms(matrix_term)
-        if !any(et -> StatsModels.symequal(et, term), effects_terms)
+
+    urterms = terms(matrix_term)
+    nonfunc_terms = [tt for tt in matrix_term.terms if !isa(tt, FunctionTerm)]
+    # only include generating terms that exist outside of a FunctionTerm
+    filter!(urterms) do tt
+        return any(x -> _termsyms(tt) < _termsyms(x), nonfunc_terms)
+    end
+
+    # we need to include FunctionTerms separately so that we can grab the transformed columns
+    func_terms = [filter(tt -> isa(tt, FunctionTerm), matrix_term.terms)...]
+    for term in [urterms; func_terms]
+        if !any(et -> _symequal(et, term), effects_terms)
             typical_terms[term] = typicalterm(term, matrix_term, model_matrix; typical=typical)
         end
     end
@@ -76,8 +83,21 @@ _replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_
 _replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
 _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term.terms, Ref(typicals)))
 
+_termsyms(t) = StatsModels.termsyms(t)
+_termsyms(t::FunctionTerm{Fo, Fa, Names}) where {Fo, Fa, Names} = Names
+_symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
+
+_trmequal(t1::AbstractTerm, t2::AbstractTerm) = _symequal(t1, t2)
+_trmequal(t1::AbstractTerm, t2::FunctionTerm) = false
+_trmequal(t1::FunctionTerm, t2::AbstractTerm) = false
+function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
+    return t1.exorig == t2.exorig &&
+        _symequal(t1, t2) &&
+        t1.forig == t2.forig
+end
+
 function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean)
-    i = findfirst(t -> StatsModels.symequal(t, term), context.terms)
+    i = findfirst(t -> _trmequal(t, term), context.terms)
     i === nothing && throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
     cols = (i == 1 ? 0 : sum(width, context.terms[1:(i - 1)])) .+ (1:width(term))
     vals = map(typical, eachcol(view(model_matrix, :, cols)))

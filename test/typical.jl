@@ -1,5 +1,6 @@
 using DataFrames
 using Effects
+using StatsBase
 using StatsModels
 using MixedModels: MixedModel, ReMat
 using Test
@@ -9,6 +10,7 @@ using Effects: _reference_grid
 
 x = collect(-10:19)
 dat = DataFrame(; x=x,
+                w = exp.(x),
                 z=repeat(["A", "B", "C"]; inner=10),
                 y=zeros(length(x)))
 
@@ -98,4 +100,37 @@ end
     y, X = modelcols(f, dat)
     refgrid = _reference_grid(Dict(:x => [π]))
     @test_throws ArgumentError typify(refgrid, f, X)
+end
+
+@testset "_trmequal" begin
+    # get that 100% coverage
+    form = @formula(y ~ 0 + x + x^2 + x^3)
+    f = apply_schema(form, schema(form, dat))
+    terms = f.rhs.terms
+    # terms[3] is the quadratic FunctionTerm
+    # terms[2] is the linear Continuous
+    @test !Effects._trmequal(terms[3], terms[2])
+    @test !Effects._trmequal(terms[2], terms[3])
+    @test Effects._trmequal(terms[2], terms[2])
+    @test Effects._trmequal(terms[3], terms[3])
+end
+
+@testset "FunctionTerm" begin
+    # no untransformed w here -- we want to make sure we don't try
+    # to grab the nonexistent column corresponding to untransformed w
+    form = @formula(y ~ 0 + x + log(w) + sqrt(w))
+    f = apply_schema(form, schema(form, dat))
+    rhs = f.rhs
+    X = modelcols(rhs, dat)
+    refgrid = _reference_grid(Dict(:x => [π]))
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w))]
+    refgrid = _reference_grid(Dict(:x => [π], :w => [π]))
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π)]
+
+    form = @formula(y ~ 0 + x + x^2 + x^3)
+    f = apply_schema(form, schema(form, dat))
+    rhs = f.rhs
+    X = modelcols(rhs, dat)
+    refgrid = _reference_grid(Dict(:x => [π]))
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π π^2 π^3]
 end
