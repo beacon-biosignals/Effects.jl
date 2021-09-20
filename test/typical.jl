@@ -102,6 +102,19 @@ end
     @test_throws ArgumentError typify(refgrid, f, X)
 end
 
+@testset "_trmequal" begin
+    # get that 100% coverage
+    form = @formula(y ~ 0 + x + x^2 + x^3)
+    f = apply_schema(form, schema(form, dat))
+    terms = f.rhs.terms
+    # terms[3] is the quadratic FunctionTerm
+    # terms[2] is the linear Continuous
+    @test !Effects._trmequal(terms[3], terms[2])
+    @test !Effects._trmequal(terms[2], terms[3])
+    @test Effects._trmequal(terms[2], terms[2])
+    @test Effects._trmequal(terms[3], terms[3])
+end
+
 @testset "FunctionTerm" begin
     # no untransformed w here -- we want to make sure we don't try
     # to grab the nonexistent column corresponding to untransformed w
