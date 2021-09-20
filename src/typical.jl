@@ -85,7 +85,7 @@ _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term
 
 _rmliterals(s) = filter(x -> !isa(x, Number), s)
 _termsyms(t) = StatsModels.termsyms(t)
-_termsyms(t::FunctionTerm) = _rmliterals(union(_termsyms.(t.args_parsed)...))
+_termsyms(t::FunctionTerm) = _rmliterals(union(_termsyms.(t.args)...))
 _symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
 
 _trmequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
@@ -93,7 +93,7 @@ _trmequal(t1::AbstractTerm, t2::FunctionTerm) = false
 _trmequal(t1::FunctionTerm, t2::AbstractTerm) = false
 function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
     return t1.exorig == t2.exorig &&
-        t1.args_parsed == t2.args_parsed &&
+        t1.args == t2.args &&
         t1.forig == t2.forig
 end
 
