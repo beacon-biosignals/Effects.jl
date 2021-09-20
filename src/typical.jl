@@ -62,7 +62,7 @@ function typify(refgrid, model_formula::FormulaTerm,
     typical_terms = Dict()
 
     urterms = terms(matrix_term)
-    nonfunc_terms = [filter(tt -> !isa(tt, FunctionTerm), matrix_term.terms)...]
+    nonfunc_terms = [tt for tt in matrix_term.terms if !isa(tt, FunctionTerm)]
     # only include generating terms that exist outside of a FunctionTerm
     filter!(urterms) do tt
         return any(x -> _termsyms(tt) < _termsyms(x), nonfunc_terms)
