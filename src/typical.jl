@@ -83,7 +83,6 @@ _replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_
 _replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
 _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term.terms, Ref(typicals)))
 
-_rmliterals(s) = filter(x -> !isa(x, Number), s)
 _termsyms(t) = StatsModels.termsyms(t)
 _termsyms(t::FunctionTerm{Fo, Fa, Names}) where {Fo, Fa, Names} = Names
 _symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
