@@ -8,8 +8,8 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     # note: keep in sync with `format/run.jl`
     paths:
-      - 'src/**' # predates the Enforcer
-      - 'test/**' # predates the Enforcer
+      - 'src/**'
+      - 'test/**'
       - 'docs/**'
       - '.github/workflows/YASG.yml'
 jobs:
