@@ -65,7 +65,7 @@ function typify(refgrid, model_formula::FormulaTerm,
     nonfunc_terms = [tt for tt in matrix_term.terms if !isa(tt, FunctionTerm)]
     # only include generating terms that exist outside of a FunctionTerm
     filter!(urterms) do tt
-        return any(x -> _termsyms(tt) < _termsyms(x), nonfunc_terms)
+        return any(x -> _termsyms(tt) <= _termsyms(x), nonfunc_terms)
     end
 
     # we need to include FunctionTerms separately so that we can grab the transformed columns
