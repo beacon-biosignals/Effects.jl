@@ -47,7 +47,7 @@ end
 
     @testset "additive" begin
         form = @formula(y ~ 1 + x + z)
-        dat[!, :y] += modelmatrix(form, dat) * beta[1:end-1]
+        dat[!, :y] += modelmatrix(form, dat) * beta[1:(end - 1)]
         model = lm(form, dat)
 
         design = Dict(:x => 1:20)
