@@ -44,25 +44,51 @@ end
     x = collect(-10:10)
     z = @. sqrt(x + 100)
     dat = DataFrame(; x=x, z=z, y=randn(StableRNG(42), length(x)))
-    form = @formula(y ~ 1 + x * z)
-    dat[!, :y] += modelmatrix(form, dat) * beta
-    model = lm(form, dat)
 
-    design = Dict(:x => 1:20)
-    maximin(v) = mean(extrema(v))
-    for typical in (maximin, mean)
-        eff = effects(design, model; typical=typical)
-        # test effect
-        intercept = ones(length(design[:x]))
-        z_typical = typical(z) * intercept
-        zx_typical = z_typical .* design[:x]
-        bs = coef(model)
-        @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical + bs[4] * zx_typical
-        # test error
-        pred = [intercept eff.x z_typical zx_typical]
-        @test eff.err ≈ sqrt.(diag(pred * vcov(model) * pred'))
-        # test CI
-        @test eff.lower ≈ eff.y - eff.err
-        @test eff.upper ≈ eff.y + eff.err
+    @testset "additive" begin
+        form = @formula(y ~ 1 + x + z)
+        dat[!, :y] += modelmatrix(form, dat) * beta[1:end-1]
+        model = lm(form, dat)
+
+        design = Dict(:x => 1:20)
+        maximin(v) = mean(extrema(v))
+        for typical in (maximin, mean)
+            eff = effects(design, model; typical=typical)
+            # test effect
+            intercept = ones(length(design[:x]))
+            z_typical = typical(z) * intercept
+            bs = coef(model)
+            @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical
+            # test error
+            pred = [intercept eff.x z_typical]
+            @test eff.err ≈ sqrt.(diag(pred * vcov(model) * pred'))
+            # test CI
+            @test eff.lower ≈ eff.y - eff.err
+            @test eff.upper ≈ eff.y + eff.err
+        end
+    end
+
+    @testset "multiplicative" begin
+        form = @formula(y ~ 1 + x * z)
+        dat[!, :y] += modelmatrix(form, dat) * beta
+        model = lm(form, dat)
+
+        design = Dict(:x => 1:20)
+        maximin(v) = mean(extrema(v))
+        for typical in (maximin, mean)
+            eff = effects(design, model; typical=typical)
+            # test effect
+            intercept = ones(length(design[:x]))
+            z_typical = typical(z) * intercept
+            zx_typical = z_typical .* design[:x]
+            bs = coef(model)
+            @test eff.y ≈ @. bs[1] + eff.x * bs[2] + bs[3] * z_typical + bs[4] * zx_typical
+            # test error
+            pred = [intercept eff.x z_typical zx_typical]
+            @test eff.err ≈ sqrt.(diag(pred * vcov(model) * pred'))
+            # test CI
+            @test eff.lower ≈ eff.y - eff.err
+            @test eff.upper ≈ eff.y + eff.err
+        end
     end
 end
