@@ -12,6 +12,7 @@ on:
       - 'test/**'
       - 'docs/**'
       - '.github/workflows/YASG.yml'
+      - 'format/**'
 jobs:
   format-check:
     name: YASG Enforcement (Julia ${{ matrix.julia-version }} - ${{ github.event_name }})
