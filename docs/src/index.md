@@ -73,7 +73,7 @@ Note that in this case, we computed the average effect of the level `A`, which i
 We can of course use the estimated effects to get a nice visual of the data:
 
 ```@example contrasts
-plt = data(eff_feed) * mapping(:feed, :weight) * (visual(Scatter) + mapping(:lower, :upper) * visual(Errorbars))
+plt = data(eff_feed) * mapping(:feed, :weight) * (visual(Scatter) + mapping(:err) * visual(Errorbars))
 draw(plt)
 ```
 
