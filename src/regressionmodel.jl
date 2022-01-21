@@ -46,7 +46,7 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     X = modelcols(form_typical, reference_grid)
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
-    reference_grid[!, something(eff_col, form.lhs.sym)] = eff
+    reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
     return reference_grid
     # XXX remove DataFrames dependency
@@ -78,7 +78,7 @@ function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper)
     grid = _reference_grid(design)
-    dv = something(eff_col, formula(model).lhs.sym)
+    dv = something(eff_col, _responsename(model))
     effects!(grid, model; eff_col=dv, err_col=err_col, typical=typical)
     # XXX DataFrames dependency
     grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
@@ -88,4 +88,23 @@ function effects(design::AbstractDict, model::RegressionModel;
     #     (; lower_col => dv .- err, upper_col => dv .+ err)
     # end
     # return (; reference_grid..., up_low...)
+end
+
+function _responsename(model::RegressionModel)
+    return try
+        responsename(model)
+    catch ex
+        # why not specialize on MethodError here?
+        # well StatsBase defines stubs for all functions in its API
+        # that just use `error()`
+        _responsename(formula(model))
+    end
+end
+
+function _responsename(f::FormulaTerm)
+    return try
+        only(unique(StatsModels.termsyms(f.lhs)))
+    catch
+        throw(ArgumentError("Unable to determine response variable automatically, please specify eff_col."))
+    end
 end

@@ -28,7 +28,9 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
     @test eff.upper ≈ eff.y + eff.err
 
     @testset "contrasts" begin
-        contrasts = Dict(:x => Center(10))
+        # need to check this works when the response has also
+        # had a name change
+        contrasts = Dict(:x => Center(10), :y => ZScore())
         model_centered = lm(@formula(y ~ x), dat; contrasts=contrasts)
 
         eff_centered = effects(design, model_centered)
@@ -37,6 +39,10 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
         @test eff_centered.y ≈ eff.y
         @test eff_centered.lower ≈ eff.lower
         @test eff_centered.upper ≈ eff.upper
+
+        @testset "response name with multiple lefthand terms" begin
+            @test_throws ArgumentError Effects._responsename(@formula(x + y ~ 1))
+        end
     end
 end
 
