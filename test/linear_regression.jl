@@ -35,14 +35,12 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
 
         eff_centered = effects(design, model_centered)
 
+        μ = mean(dat.y)
+        σ = std(dat.y)
         # different contrasts shouldn't affect the predictions/effects
-        @test eff_centered.y ≈ eff.y
-        @test eff_centered.lower ≈ eff.lower
-        @test eff_centered.upper ≈ eff.upper
-
-        @testset "response name with multiple lefthand terms" begin
-            @test_throws ArgumentError Effects._responsename(@formula(x + y ~ 1))
-        end
+        @test eff_centered[!, "y(centered: 0.21 scaled: 6.27)"] ≈ zscore(eff.y, µ, σ)
+        @test eff_centered.lower ≈ zscore(eff.lower, µ, σ)
+        @test eff_centered.upper ≈ zscore(eff.upper, µ, σ)
     end
 end
 
