@@ -102,9 +102,5 @@ function _responsename(model::RegressionModel)
 end
 
 function _responsename(f::FormulaTerm)
-    return try
-        string(f.lhs)
-    catch
-        throw(ArgumentError("Unable to determine response variable automatically, please specify eff_col."))
-    end
+    return string(f.lhs)
 end
