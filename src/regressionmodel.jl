@@ -14,8 +14,24 @@ set used to fit the model.
 
 By default, the column corresponding to the response variable in the formula
 is overwritten with the effects, but an alternative column for the effects can
-be specified by `eff_col`. If this column does not exist, it is created.
+be specified by `eff_col`. Note that `eff_col` is determined first by trying
+`StatsBase.responsename` and then falling back to the `string` representation
+of the model's formula's left-hand side. For models with a transformed response,
+whether in the original formula specification or via hints/contrasts, the name
+will be the display name of the resulting term and not the original variable.
+This convention also has the advantage of highlighting another aspect of the
+underlying method: effects are computed on the scale of the transformed response.
+If this column does not exist, it is created.
 Pointwise standard errors are written into the column specified by `err_col`.
+
+!!! note
+    Effects are computed on the scale of the transformed response.
+    For models with an explicit transformation, that transformation
+    is the scale of the effects. For models with a link function,
+    the scale of the effects is the _link_ scale, i.e. after
+    application of the link function. For example, effects for
+    logitistic regression models are on the logit and not the probability
+    scale.
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
@@ -46,7 +62,7 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     X = modelcols(form_typical, reference_grid)
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
-    reference_grid[!, something(eff_col, form.lhs.sym)] = eff
+    reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
     return reference_grid
     # XXX remove DataFrames dependency
@@ -78,7 +94,7 @@ function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper)
     grid = _reference_grid(design)
-    dv = something(eff_col, formula(model).lhs.sym)
+    dv = something(eff_col, _responsename(model))
     effects!(grid, model; eff_col=dv, err_col=err_col, typical=typical)
     # XXX DataFrames dependency
     grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
@@ -88,4 +104,19 @@ function effects(design::AbstractDict, model::RegressionModel;
     #     (; lower_col => dv .- err, upper_col => dv .+ err)
     # end
     # return (; reference_grid..., up_low...)
+end
+
+function _responsename(model::RegressionModel)
+    return try
+        responsename(model)
+    catch ex
+        # why not specialize on MethodError here?
+        # well StatsBase defines stubs for all functions in its API
+        # that just use `error()`
+        _responsename(formula(model))
+    end
+end
+
+function _responsename(f::FormulaTerm)
+    return string(f.lhs)
 end

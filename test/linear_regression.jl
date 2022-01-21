@@ -28,15 +28,19 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
     @test eff.upper ≈ eff.y + eff.err
 
     @testset "contrasts" begin
-        contrasts = Dict(:x => Center(10))
+        # need to check this works when the response has also
+        # had a name change
+        contrasts = Dict(:x => Center(10), :y => ZScore())
         model_centered = lm(@formula(y ~ x), dat; contrasts=contrasts)
 
         eff_centered = effects(design, model_centered)
 
+        μ = mean(dat.y)
+        σ = std(dat.y)
         # different contrasts shouldn't affect the predictions/effects
-        @test eff_centered.y ≈ eff.y
-        @test eff_centered.lower ≈ eff.lower
-        @test eff_centered.upper ≈ eff.upper
+        @test eff_centered[!, "y(centered: 0.21 scaled: 6.27)"] ≈ zscore(eff.y, µ, σ)
+        @test eff_centered.lower ≈ zscore(eff.lower, µ, σ)
+        @test eff_centered.upper ≈ zscore(eff.upper, µ, σ)
     end
 end
 
