@@ -14,8 +14,24 @@ set used to fit the model.
 
 By default, the column corresponding to the response variable in the formula
 is overwritten with the effects, but an alternative column for the effects can
-be specified by `eff_col`. If this column does not exist, it is created.
+be specified by `eff_col`. Note that `eff_col` is determined first by trying
+`StatsBase.responsename` and then falling back to the `string` representation
+of the model's formula's left-hand side. For models with a transformed response,
+whether in the original formula specification or via hints/contrasts, the name
+will be the display name of the resulting term and not the original variable.
+This convention also has the advantage of highlighting another aspect of the
+underlying method: effects are computed on the scale of the transformed response.
+If this column does not exist, it is created.
 Pointwise standard errors are written into the column specified by `err_col`.
+
+!!! note
+    Effects are computed on the scale of the transformed response.
+    For models with an explicit transformation, that transformation
+    is the scale of the effects. For models with a link function,
+    the scale of the effects is the _link_ scale, i.e. after
+    application of the link function. For example, effects for
+    logitistic regression models are on the logit and not the probability
+    scale.
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
