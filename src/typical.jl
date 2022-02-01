@@ -47,7 +47,7 @@ function get_matrix_term(x)
     x = x isa MatrixTerm ? x : first(x)
     x isa MatrixTerm || throw(ArgumentError("couldn't extract matrix term from $x"))
     if first(terms(x)) isa MatrixTerm
-        x = only(terms(x)
+        x = only(terms(x))
     end
     return x
 end
