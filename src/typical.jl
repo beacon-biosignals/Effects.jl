@@ -30,24 +30,24 @@ function StatsModels.modelcols(t::TypicalTerm, d::NamedTuple)
     return cols
 end
 
-StatsBase.coefnames(t::TypicalTerm) = coefnames(t.term)
+StatsBase.coefnames(t::TypicalTerm) = coefnames(term(t))
 # regular show
-Base.show(io::IO, t::TypicalTerm) = show(io, t.term)
+Base.show(io::IO, t::TypicalTerm) = show(io, term(t))
 # long show
-Base.show(io::IO, m::MIME"text/plain", t::TypicalTerm) = show(io, m, t.term)
+Base.show(io::IO, m::MIME"text/plain", t::TypicalTerm) = show(io, m, term(t))
 
 # statsmodels glue code:
-StatsModels.width(t::TypicalTerm) = StatsModels.width(t.term)
+StatsModels.width(t::TypicalTerm) = StatsModels.width(term(t))
 # don't generate schema entries for terms which are already typified
 StatsModels.needs_schema(::TypicalTerm) = false
-StatsModels.termsyms(t::TypicalTerm) = StatsModels.termsyms(t.term)
+StatsModels.termsyms(t::TypicalTerm) = StatsModels.termsyms(term(t))
 
 function get_matrix_term(x)
     x = StatsModels.collect_matrix_terms(x)
     x = x isa MatrixTerm ? x : first(x)
     x isa MatrixTerm || throw(ArgumentError("couldn't extract matrix term from $x"))
-    if first(x.terms) isa MatrixTerm
-        x = only(x.terms)
+    if first(terms(x)) isa MatrixTerm
+        x = only(terms(x)
     end
     return x
 end
@@ -62,14 +62,14 @@ function typify(refgrid, model_formula::FormulaTerm,
     typical_terms = Dict()
 
     urterms = terms(matrix_term)
-    nonfunc_terms = [tt for tt in matrix_term.terms if !isa(tt, FunctionTerm)]
+    nonfunc_terms = [tt for tt in terms(matrix_term) if !isa(tt, FunctionTerm)]
     # only include generating terms that exist outside of a FunctionTerm
     filter!(urterms) do tt
         return any(x -> _termsyms(tt) <= _termsyms(x), nonfunc_terms)
     end
 
     # we need to include FunctionTerms separately so that we can grab the transformed columns
-    func_terms = [filter(tt -> isa(tt, FunctionTerm), matrix_term.terms)...]
+    func_terms = [filter(tt -> isa(tt, FunctionTerm), terms(matrix_term))...]
     for term in [urterms; func_terms]
         if !any(et -> _symequal(et, term), effects_terms)
             typical_terms[term] = typicalterm(term, matrix_term, model_matrix; typical=typical)
@@ -79,9 +79,9 @@ function typify(refgrid, model_formula::FormulaTerm,
     return _replace(matrix_term, typical_terms)
 end
 
-_replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_term.terms, Ref(typicals)))
+_replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(terms(matrix_term), Ref(typicals)))
 _replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
-_replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(term.terms, Ref(typicals)))
+_replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(terms(term), Ref(typicals)))
 
 _termsyms(t) = StatsModels.termsyms(t)
 _termsyms(t::FunctionTerm{Fo, Fa, Names}) where {Fo, Fa, Names} = Names
@@ -97,9 +97,9 @@ function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
 end
 
 function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean)
-    i = findfirst(t -> _trmequal(t, term), context.terms)
+    i = findfirst(t -> _trmequal(t, term), terms(context))
     i === nothing && throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
-    cols = (i == 1 ? 0 : sum(width, context.terms[1:(i - 1)])) .+ (1:width(term))
+    cols = (i == 1 ? 0 : sum(width, terms(context)[1:(i - 1)])) .+ (1:width(term))
     vals = map(typical, eachcol(view(model_matrix, :, cols)))
     all(v -> length(v) == 1, vals) || throw(ArgumentError("Typical function should return a scalar."))
     return TypicalTerm(term, vals)
