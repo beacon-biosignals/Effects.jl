@@ -37,6 +37,7 @@ Base.show(io::IO, t::TypicalTerm) = show(io, term(t))
 Base.show(io::IO, m::MIME"text/plain", t::TypicalTerm) = show(io, m, term(t))
 
 # statsmodels glue code:
+StatsModels.term(t::TypicalTerm) = t.term
 StatsModels.width(t::TypicalTerm) = StatsModels.width(term(t))
 # don't generate schema entries for terms which are already typified
 StatsModels.needs_schema(::TypicalTerm) = false
