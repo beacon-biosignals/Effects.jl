@@ -73,19 +73,26 @@ function typify(refgrid, model_formula::FormulaTerm,
     func_terms = [filter(tt -> isa(tt, FunctionTerm), terms(matrix_term))...]
     for term in [urterms; func_terms]
         if !any(et -> _symequal(et, term), effects_terms)
-            typical_terms[term] = typicalterm(term, matrix_term, model_matrix; typical=typical)
+            typical_terms[term] = typicalterm(term, matrix_term, model_matrix;
+                                              typical=typical)
         end
     end
 
     return _replace(matrix_term, typical_terms)
 end
 
-_replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_term.terms, Ref(typicals)))
-_replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
-_replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(terms(term), Ref(typicals)))
+function _replace(matrix_term::MatrixTerm, typicals::Dict)
+    return MatrixTerm(_replace.(matrix_term.terms, Ref(typicals)))
+end
+function _replace(term::AbstractTerm, typicals::Dict)
+    return haskey(typicals, term) ? typicals[term] : term
+end
+function _replace(term::InteractionTerm, typicals::Dict)
+    return InteractionTerm(_replace.(terms(term), Ref(typicals)))
+end
 
 _termsyms(t) = StatsModels.termsyms(t)
-_termsyms(t::FunctionTerm{Fo, Fa, Names}) where {Fo, Fa, Names} = Names
+_termsyms(t::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
 _symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
 
 _trmequal(t1::AbstractTerm, t2::AbstractTerm) = _symequal(t1, t2)
@@ -93,15 +100,17 @@ _trmequal(t1::AbstractTerm, t2::FunctionTerm) = false
 _trmequal(t1::FunctionTerm, t2::AbstractTerm) = false
 function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
     return t1.exorig == t2.exorig &&
-        _symequal(t1, t2) &&
-        t1.forig == t2.forig
+           _symequal(t1, t2) &&
+           t1.forig == t2.forig
 end
 
 function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean)
     i = findfirst(t -> _trmequal(t, term), terms(context))
-    i === nothing && throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
+    i === nothing &&
+        throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
     cols = (i == 1 ? 0 : sum(width, terms(context)[1:(i - 1)])) .+ (1:width(term))
     vals = map(typical, eachcol(view(model_matrix, :, cols)))
-    all(v -> length(v) == 1, vals) || throw(ArgumentError("Typical function should return a scalar."))
+    all(v -> length(v) == 1, vals) ||
+        throw(ArgumentError("Typical function should return a scalar."))
     return TypicalTerm(term, vals)
 end
