@@ -99,7 +99,34 @@ end
     rhs = f.rhs
     y, X = modelcols(f, dat)
     refgrid = _reference_grid(Dict(:x => [π]))
-    @test_throws ArgumentError typify(refgrid, f, X)
+    typicalf = typify(refgrid, f, X)
+    # first col is x, so π
+    # second col and third cols are x & z
+    # so in some sense, we have π * mean(x & z)
+    # but note that this is a bit of a pathological case
+    # I think this is consistent with how we handle FunctionTerms
+    # and typical values of categorical terms (effectively weighted average)
+    # and reflects that the reference grid approach is kinda wonky
+    # when with models that violate the hierarchical principle
+    # and don't specify the full underlying grid
+    # TODO document this
+    colmeans = mean(X[:,2:3], dims=1)
+    @test modelcols(typicalf, refgrid) ≈ π * hcat([1], colmeans)
+
+    # note that this approach works correctly when
+    # the levels of z are provided
+    # A is the reference level, so all other terms should be zero
+    refgrid = _reference_grid(Dict(:x => [π], :z => ["A"]))
+    typicalf = typify(refgrid, f, X)
+    @test modelcols(typicalf, refgrid) ≈ Float64[π 0 0 ]
+
+    refgrid = _reference_grid(Dict(:x => [π], :z => ["B"]))
+    typicalf = typify(refgrid, f, X)
+    @test modelcols(typicalf, refgrid) ≈ Float64[π π 0]
+
+    refgrid = _reference_grid(Dict(:x => [π], :z => ["C"]))
+    typicalf = typify(refgrid, f, X)
+    @test modelcols(typicalf, refgrid) ≈ Float64[π 0 π]
 end
 
 @testset "_trmequal" begin

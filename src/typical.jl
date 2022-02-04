@@ -80,7 +80,7 @@ function typify(refgrid, model_formula::FormulaTerm,
     return _replace(matrix_term, typical_terms)
 end
 
-_replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(terms(matrix_term), Ref(typicals)))
+_replace(matrix_term::MatrixTerm, typicals::Dict) = MatrixTerm(_replace.(matrix_term.terms, Ref(typicals)))
 _replace(term::AbstractTerm, typicals::Dict) = haskey(typicals, term) ? typicals[term] : term
 _replace(term::InteractionTerm, typicals::Dict) = InteractionTerm(_replace.(terms(term), Ref(typicals)))
 
