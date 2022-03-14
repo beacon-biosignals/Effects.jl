@@ -26,7 +26,7 @@ Pointwise standard errors are written into the column specified by `err_col`.
 
 !!! note
     Effects are computed on the scale of the transformed response.
-    Unless the inverse link function is specified. 
+    Unless the inverse link function is specified.
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
@@ -49,13 +49,13 @@ Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
-                  eff_col=nothing, err_col=:err, typical=mean, inv_link=identity)
+                  eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
     # right now this is written for a RegressionModel and implicitly assumes
     form = formula(model)
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical)
     X = modelcols(form_typical, reference_grid)
-    X_transformed = ForwardDiff.derivative.(inv_link, X)
-    eff = inv_link.(X * coef(model))
+    X_transformed = ForwardDiff.derivative.(invlink, X)
+    eff = invlink.(X * coef(model))
     err = sqrt.(diag(X_transformed * vcov(model) * X_transformed'))
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
@@ -87,10 +87,10 @@ the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
-                 lower_col=:lower, upper_col=:upper, inv_link=identity)
+                 lower_col=:lower, upper_col=:upper, invlink=identity)
     grid = _reference_grid(design)
     dv = something(eff_col, _responsename(model))
-    effects!(grid, model; eff_col=dv, err_col=err_col, typical=typical, inv_link=inv_link)
+    effects!(grid, model; eff_col=dv, err_col, typical, invlink)
     # XXX DataFrames dependency
     grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
     grid[!, upper_col] = grid[!, dv] + grid[!, err_col]
