@@ -25,8 +25,18 @@ If this column does not exist, it is created.
 Pointwise standard errors are written into the column specified by `err_col`.
 
 !!! note
-    Effects are computed on the scale of the transformed response.
-    Unless the inverse link function is specified.
+    By default (`invlink=identity`), effects are computed on the scale of the
+    transformed response. For models with an explicit transformation, that
+    transformation is the scale of the effects. For models with a link function,
+    the scale of the effects is the _link_ scale, i.e. after application of the
+    link function. For example, effects for logitistic regression models are on
+    the logit and not the probability scale.
+
+!!! warning
+    If the inverse link is specified via `invlink`, then effects and errors are
+    computed on the original, untransformed scale via the delta method using
+    automatic differentiation. This means that the `invlink` function must be
+    differentiable and should not involve inplace operations.
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
@@ -48,7 +58,6 @@ The approach for computing effect is based on the effects plots described here:
 Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
-# TODO explain that can still use the transformation method themselves
 function effects!(reference_grid::DataFrame, model::RegressionModel;
                   eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
     # right now this is written for a RegressionModel and implicitly assumes
@@ -58,9 +67,8 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
     if invlink !== identity
-        ∇invlink = ForwardDiff.derivative.(invlink, eff)
-        err = err .* ∇invlink
-        eff = invlink.(eff)
+        err .*= ForwardDiff.derivative.(invlink, eff)
+        eff .= invlink.(eff)
     end
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
@@ -90,8 +98,6 @@ is specified. This is then expanded into a reference grid representing a
 fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
-# note that if the user does their own transformations, they should do it on the
-# band edges and not on the error itself
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper, invlink=identity)
