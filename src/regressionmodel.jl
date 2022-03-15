@@ -1,6 +1,6 @@
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
-             eff_col=nothing, err_col=:err, typical=mean, inv_link=identity)
+             eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
 
 Compute the `effects` as specified in `formula`.
 
@@ -48,15 +48,20 @@ The approach for computing effect is based on the effects plots described here:
 Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
+# TODO explain that can still use the transformation method themselves
 function effects!(reference_grid::DataFrame, model::RegressionModel;
                   eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
     # right now this is written for a RegressionModel and implicitly assumes
     form = formula(model)
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical)
     X = modelcols(form_typical, reference_grid)
-    X_transformed = ForwardDiff.derivative.(invlink, X)
-    eff = invlink.(X * coef(model))
-    err = sqrt.(diag(X_transformed * vcov(model) * X_transformed'))
+    eff = X * coef(model)
+    err = sqrt.(diag(X * vcov(model) * X'))
+    if invlink !== identity
+        ∇invlink = ForwardDiff.derivative.(invlink, eff)
+        err = err .* ∇invlink
+        eff = invlink.(eff)
+    end
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
     return reference_grid
@@ -75,7 +80,7 @@ end
 """
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
-            lower_col=:lower, upper_col=:upper)
+            lower_col=:lower, upper_col=:upperr, invlink=identity)
 
 Compute the `effects` as specified by the `design`.
 
@@ -85,9 +90,12 @@ is specified. This is then expanded into a reference grid representing a
 fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
+# note that if the user does their own transformations, they should do it on the
+# band edges and not on the error itself
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper, invlink=identity)
+    # TODO: add support for confidence intervals instead of std error
     grid = _reference_grid(design)
     dv = something(eff_col, _responsename(model))
     effects!(grid, model; eff_col=dv, err_col, typical, invlink)
