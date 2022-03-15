@@ -5,7 +5,6 @@ using LinearAlgebra
 using RDatasets: dataset as rdataset
 using Test
 
-
 @testset "transformed response" begin
     dat = rdataset("car", "Prestige")
     model = lm(@formula(log(Prestige) ~ 1 + Income * Education), dat)
@@ -28,7 +27,7 @@ end
     design = Dict(:Extraversion => [13],
                   :Neuroticism => [16])
     eff = effects(design, model; invlink)
-    X = [1.0 13.0 16.0 13*16]
+    X = [1.0 13.0 16.0 13 * 16]
     pred = DataFrame(predict(model.model, X;
                              interval=:confidence,
                              interval_method=:delta,
