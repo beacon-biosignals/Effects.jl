@@ -10,7 +10,7 @@ using Effects: _reference_grid
 
 x = collect(-10:19)
 dat = DataFrame(; x=x,
-                w = exp.(x),
+                w=exp.(x),
                 z=repeat(["A", "B", "C"]; inner=10),
                 y=zeros(length(x)))
 
@@ -77,8 +77,8 @@ end
     # fourth col is -1, 0 because it's the "z: C" contrast and we have 1 A and 1 B
     # fifth col is the product of the cols 2&3
     # sixt col is the product of the cols 2&4
-    @test modelcols(typicalf, refgrid) == Float64[1 typx -1 -1 -typx  -typx
-                                                  1 typx  1  0  typx      0]
+    @test modelcols(typicalf, refgrid) == Float64[1 typx -1 -1 -typx -typx
+                                                  1 typx 1 0 typx 0]
     # typical of categorical vars
     f = apply_schema(form, schema(form, dat, Dict(:z => DummyCoding())))
     rhs = f.rhs
@@ -91,7 +91,7 @@ end
     # fourth col is 1/3 because it's a balanced design
     # fifth col is the product of the cols 2&3
     # sixt col is the product of the cols 2&4
-    @test modelcols(typicalf, refgrid) ≈ Float64[1 π 1/3 1/3 π/3 π/3]
+    @test modelcols(typicalf, refgrid) ≈ Float64[1 π 1 / 3 1 / 3 π / 3 π / 3]
 
     # weird models
     form = @formula(y ~ 0 + x + x & z)
@@ -123,7 +123,8 @@ end
     rhs = f.rhs
     X = modelcols(rhs, dat)
     refgrid = _reference_grid(Dict(:x => [π]))
-    @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w))]
+    @test modelcols(typify(refgrid, f, X), refgrid) ≈
+          Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w))]
     refgrid = _reference_grid(Dict(:x => [π], :w => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π)]
 
