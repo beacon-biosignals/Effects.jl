@@ -17,6 +17,24 @@ using Test
     deriv = exp.(eff_logscale[!, 3])
     err = eff_logscale.err .* deriv
     @test all(eff_original_scale.err .≈ err)
+
+    # compare with results from emmeans in R
+    # relatively high tolerances for the point estimates b/c that's very susceptible
+    # to variation in the coef estimates, but the vcov estimates are more stable
+    # emmeans(model,  ~ income * education, level=0.68)
+    eff_emm = effects(Dict(:Income => [6798], :Education=> [10.7]), model; eff_col="log(Prestige)")
+    @test only(eff_emm[!, "log(Prestige)"]) ≈ 3.84 atol=0.01
+    @test only(eff_emm.err) ≈ 0.023 atol=0.005
+    @test only(eff_emm.lower) ≈ 3.81 atol=0.005
+    @test only(eff_emm.upper) ≈ 3.86 atol=0.005
+
+    # emmeans(model, ~ income * education, level=0.68, transform="response")
+    eff_emm_trans = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model;
+                            invlink=exp, eff_col="Prestige")
+    @test only(eff_emm_trans[!, "Prestige"]) ≈ 46.4 atol=0.05
+    @test only(eff_emm_trans.err) ≈ 1.07 atol=0.005
+    @test only(eff_emm_trans.lower) ≈ 45.3 atol=0.05
+    @test only(eff_emm_trans.upper) ≈ 47.5 atol=0.05
 end
 
 @testset "link function" begin
@@ -28,6 +46,7 @@ end
                   :Neuroticism => [16])
     eff = effects(design, model; invlink)
     X = [1.0 13.0 16.0 13 * 16]
+    # compare with results from GLM.predict
     pred = DataFrame(predict(model.model, X;
                              interval=:confidence,
                              interval_method=:delta,
@@ -45,4 +64,19 @@ end
     @test all(eff_trans.vol .≈ eff.vol)
     @test all(isapprox.(eff_trans.lower, eff.lower; atol=0.001))
     @test all(isapprox.(eff_trans.upper, eff.upper; atol=0.001))
+
+    # compare with results from emmeans in R
+    # emmeans(model, ~ neuroticism * extraversion, level=0.68)
+    eff_emm = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model)
+    @test only(eff_emm.vol) ≈ -0.347 atol=0.005
+    @test only(eff_emm.err) ≈ 0.0549 atol=0.005
+    @test only(eff_emm.lower) ≈ -0.402 atol=0.005
+    @test only(eff_emm.upper) ≈ -0.292 atol=0.005
+
+    # emmeans(model, ~ neuroticism * extraversion, level=0.68, transform="response")
+    eff_emm_trans = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model; invlink)
+    @test only(eff_emm_trans.vol) ≈ 0.414 atol=0.005
+    @test only(eff_emm_trans.err) ≈ 0.0133 atol=0.005
+    @test only(eff_emm_trans.lower) ≈ 0.401 atol=0.005
+    @test only(eff_emm_trans.upper) ≈ 0.427 atol=0.005
 end
