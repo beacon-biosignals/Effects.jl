@@ -88,7 +88,7 @@ end
 """
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
-            lower_col=:lower, upper_col=:upperr, invlink=identity)
+            lower_col=:lower, upper_col=:upper, invlink=identity)
 
 Compute the `effects` as specified by the `design`.
 
