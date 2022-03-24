@@ -1,6 +1,6 @@
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
-             eff_col=nothing, err_col=:err, typical=mean)
+             eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
 
 Compute the `effects` as specified in `formula`.
 
@@ -25,13 +25,18 @@ If this column does not exist, it is created.
 Pointwise standard errors are written into the column specified by `err_col`.
 
 !!! note
-    Effects are computed on the scale of the transformed response.
-    For models with an explicit transformation, that transformation
-    is the scale of the effects. For models with a link function,
-    the scale of the effects is the _link_ scale, i.e. after
-    application of the link function. For example, effects for
-    logitistic regression models are on the logit and not the probability
-    scale.
+    By default (`invlink=identity`), effects are computed on the scale of the
+    transformed response. For models with an explicit transformation, that
+    transformation is the scale of the effects. For models with a link function,
+    the scale of the effects is the _link_ scale, i.e. after application of the
+    link function. For example, effects for logitistic regression models are on
+    the logit and not the probability scale.
+
+!!! warning
+    If the inverse link is specified via `invlink`, then effects and errors are
+    computed on the original, untransformed scale via the delta method using
+    automatic differentiation. This means that the `invlink` function must be
+    differentiable and should not involve inplace operations.
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
@@ -54,14 +59,18 @@ Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
-                  eff_col=nothing, err_col=:err, typical=mean)
+                  eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
     # right now this is written for a RegressionModel and implicitly assumes
-    # no link function and the existence of an appropriate formula method
+    # the existence of an appropriate formula method
     form = formula(model)
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical)
     X = modelcols(form_typical, reference_grid)
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
+    if invlink !== identity
+        err .*= ForwardDiff.derivative.(invlink, eff)
+        eff .= invlink.(eff)
+    end
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
     return reference_grid
@@ -80,7 +89,7 @@ end
 """
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
-            lower_col=:lower, upper_col=:upper)
+            lower_col=:lower, upper_col=:upper, invlink=identity)
 
 Compute the `effects` as specified by the `design`.
 
@@ -92,10 +101,11 @@ the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
-                 lower_col=:lower, upper_col=:upper)
+                 lower_col=:lower, upper_col=:upper, invlink=identity)
+    # TODO: add support for confidence intervals instead of std error
     grid = _reference_grid(design)
     dv = something(eff_col, _responsename(model))
-    effects!(grid, model; eff_col=dv, err_col=err_col, typical=typical)
+    effects!(grid, model; eff_col=dv, err_col, typical, invlink)
     # XXX DataFrames dependency
     grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
     grid[!, upper_col] = grid[!, dv] + grid[!, err_col]

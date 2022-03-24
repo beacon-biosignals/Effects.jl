@@ -9,6 +9,7 @@ using StatsBase
 using Tables
 
 using StatsModels: AbstractTerm
+using ForwardDiff
 
 export effects
 export effects!
