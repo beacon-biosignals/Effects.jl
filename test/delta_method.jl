@@ -3,6 +3,7 @@ using Effects
 using GLM
 using LinearAlgebra
 using RDatasets: dataset as rdataset
+using StableRNGs
 using Test
 
 @testset "transformed response" begin
@@ -81,4 +82,26 @@ end
     @test isapprox(only(eff_emm_trans.err), 0.0133; atol=0.005)
     @test isapprox(only(eff_emm_trans.lower), 0.401; atol=0.005)
     @test isapprox(only(eff_emm_trans.upper), 0.427; atol=0.005)
+end
+
+@testset "identity by another name" begin
+    b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
+    x = collect(-10:10)
+    dat = (; :x => x, :y => x .* b1 .+ b0 + randn(StableRNG(42), length(x)))
+    model = lm(@formula(y ~ x), dat)
+
+    invlink = x -> x # same as identity but won't trigger that branch
+    @test invlink !== identity
+
+    design = Dict(:x => 1:20)
+    # if our math on the delta method is correct, then it should work for the
+    # identity case, even though we special case identity() to reduce the
+    # computation
+    eff = effects(design, model; invlink=identity)
+    eff_link = effects(design, model; invlink)
+    # these should be exactly equal b/c derivative is just a bunch of ones
+    # however, we may have to loosen this to approximate equality if
+    # the linear algebra gets very optimized and we start seeing the effects
+    # of associativity in SIMD operations
+    @test eff == eff_link
 end
