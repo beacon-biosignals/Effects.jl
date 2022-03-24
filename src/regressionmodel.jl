@@ -61,6 +61,7 @@ Journal of Statistical Software. Vol. 8, No. 15
 function effects!(reference_grid::DataFrame, model::RegressionModel;
                   eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
     # right now this is written for a RegressionModel and implicitly assumes
+    # the existence of an appropriate formula method
     form = formula(model)
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical)
     X = modelcols(form_typical, reference_grid)
