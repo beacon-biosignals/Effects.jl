@@ -1,6 +1,7 @@
 module Effects
 
 using Base.Iterators: product
+using Combinatorics: combinations
 using DataFrames
 using LinearAlgebra
 using Statistics
@@ -11,10 +12,11 @@ using Tables
 using StatsModels: AbstractTerm
 using ForwardDiff
 
-export effects
-export effects!
-
 include("typical.jl")
 include("regressionmodel.jl")
+export effects, effects!
+
+include("emmeans.jl")
+export emmeans, empairs
 
 end # module
