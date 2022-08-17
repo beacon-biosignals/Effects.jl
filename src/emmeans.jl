@@ -53,7 +53,7 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err)
             result[col] = if df1[col] == df2[col]
                 df1[col]
             else
-                string(df1[col], ">", df2[col])
+                string(df1[col], " > ", df2[col])
             end
         end
         result[eff_col] = df1[eff_col] - df2[eff_col]

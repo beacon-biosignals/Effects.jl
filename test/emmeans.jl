@@ -56,7 +56,7 @@ em = emmeans(model)
 
 emp = empairs(model)
 @test names(emp) == ["sex", "age", "weight", "err"]
-@test emp.sex == ["female>male", "female>other", "male>other"]
+@test emp.sex == ["female > male", "female > other", "male > other"]
 @test all(emp.age .== 16.5)
 @test all(isapprox.(emp.weight, [-16.000323, -1.480698, 14.519625]; atol=0.001))
 @test all(isapprox.(emp.err, [0.8031862, 2.1342104, 2.0501163]; atol=0.001))
