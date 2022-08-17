@@ -38,21 +38,27 @@ pooled_sem(x...) = sqrt(sum(abs2, x))
 
 # TODO: mark this as experimental and subject to formatting, etc. changes
 function empairs(df::AbstractDataFrame; eff_col, err_col=:err)
+    # need to enforce that we're all the same type
+    # (mixing string and symbol is an issue with Not
+    #  and a few other things below)
+    eff_col = string(eff_col)
+    err_col = string(err_col)
+
     pairs = combinations(eachrow(df), 2)
     # TODO make this more efficient in allocations
-    return mapreduce(vcat, pairs) do (df1, df2)
-        result = DataFrame()
-        # need to enforce that we're all the same type
-        # (mixing string and symbol is an issue with Not)
-        for col in names(df1, Not(string.([eff_col, err_col])))
-            result[!, col] = if df1[col] == df2[col]
-                [df1[col]]
+    result_df = mapreduce(vcat, pairs) do (df1, df2)
+        result =  Dict{String, Union{String, Number}}()
+
+        for col in names(df1, Not([eff_col, err_col]))
+            result[col] = if df1[col] == df2[col]
+                df1[col]
             else
-                [string(df1[col], ">", df2[col])]
+                string(df1[col], ">", df2[col])
             end
         end
-        result[!, eff_col] = [df1[eff_col] - df2[eff_col]]
-        result[!, err_col] = [pooled_sem(df1[err_col], df2[err_col])]
-        return result
+        result[eff_col] = df1[eff_col] - df2[eff_col]
+        result[err_col] = pooled_sem(df1[err_col], df2[err_col])
+        return DataFrame(result)
     end
+    return select!(result_df, names(df, Not([eff_col, err_col])), eff_col, err_col)
 end
