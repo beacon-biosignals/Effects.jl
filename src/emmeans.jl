@@ -1,13 +1,12 @@
-# XXX what about df?
-# XXX what about test statistics?
-# XXX what about MC-corrected p-values?
+# XXX what about marginalization weights?
 
 # similar to effects (and the underlying math is the same) but
 # the establishment of the reference grid is different
 # we don't allow specifying the "typifier" here -- if you want that,
 # then choose a less full service function
+# point people to dof_residual, infinite_dof, and maybe some notes on mixed models
 function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
-                 invlink=identity, levels=Dict())
+                 invlink=identity, levels=Dict(), dof=nothing)
     form = formula(model)
     # cat_terms = filter(x -> x isa CategoricalTerm, terms(form.rhs))
     # defaults =  Dict(tt.sym => tt.contrasts.levels for tt in cat_terms)
@@ -22,34 +21,43 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     end
     levels = merge(defaults, levels) # prefer user specified levels
     grid = _reference_grid(levels)
-    dv = something(eff_col, _responsename(model))
-    # XXX what about df?
-    return effects!(grid, model; eff_col=dv, err_col, typical=mean, invlink)
+    eff_col = string(something(eff_col, _responsename(model)))
+    err_col = string(err_col)
+
+    result = effects!(grid, model; eff_col, err_col, typical=mean, invlink)
+    if !isnothing(dof)
+        result[!, :dof] .= dof(model)
+    end
+    return result
 end
 
 function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
-               invlink=identity, levels=Dict())
+               invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
     eff_col = something(eff_col, _responsename(model))
-    em = emmeans(model; eff_col, err_col, invlink, levels)
-    return empairs(em; eff_col, err_col,)
+    em = emmeans(model; eff_col, err_col, invlink, levels, dof)
+    return empairs(em; eff_col, err_col, padjust)
 end
 
-pooled_sem(x...) = sqrt(sum(abs2, x))
+pooled_sem(sems...) = sqrt(sum(abs2, sems))
+infinite_dof(::RegressionModel) = Inf
 
 # TODO: mark this as experimental and subject to formatting, etc. changes
-function empairs(df::AbstractDataFrame; eff_col, err_col=:err)
+# TODO point people to https://juliangehring.github.io/MultipleTesting.jl/stable/
+function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     # need to enforce that we're all the same type
     # (mixing string and symbol is an issue with Not
     #  and a few other things below)
     eff_col = string(eff_col)
     err_col = string(err_col)
+    stats_cols = [eff_col, err_col]
+    "dof" in names(df) && push!(stats_cols, "dof")
 
     pairs = combinations(eachrow(df), 2)
     # TODO make this more efficient in allocations
     result_df = mapreduce(vcat, pairs) do (df1, df2)
         result =  Dict{String, Union{String, Number}}()
 
-        for col in names(df1, Not([eff_col, err_col]))
+        for col in names(df1, Not(stats_cols))
             result[col] = if df1[col] == df2[col]
                 df1[col]
             else
@@ -58,7 +66,24 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err)
         end
         result[eff_col] = df1[eff_col] - df2[eff_col]
         result[err_col] = pooled_sem(df1[err_col], df2[err_col])
+        if "dof" in names(df)
+            df1["dof"] != df2["dof"] &&
+                throw(ArgumentError("Incompatible dof found for rows $(df1) and $(df2)"))
+            result["dof"] = df1["dof"]
+        end
         return DataFrame(result)
     end
-    return select!(result_df, names(df, Not([eff_col, err_col])), eff_col, err_col)
+
+    cols = vcat(names(df, Not(stats_cols)), stats_cols)
+    select!(result_df, cols)
+    if "dof" in stats_cols
+        transform!(result_df, [eff_col, err_col] => ByRow(/) => "t")
+        transform!(result_df, [:dof, :t] => ByRow() do dof, t
+            p = 2 * cdf(TDist(dof), -abs(t))
+            return p
+        end => "Pr(>|t|)")
+        transform!(result_df, "Pr(>|t|)" => padjust => "Pr(>|t|)")
+    end
+    return result_df
 end
+""

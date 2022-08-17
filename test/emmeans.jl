@@ -37,6 +37,10 @@ model = lm(@formula(weight ~ 1 + sex * age), growthdata)
 em = emmeans(model)
 @test all(isapprox.(em.weight, [111.6818, 127.6822, 113.1625]; atol=0.001))
 @test all(isapprox.(em.err, [0.7060401, 0.3829040, 2.0140411]; atol=0.001))
+@test !in("dof", names(em))
+
+em = emmeans(model; dof=dof_residual)
+@test all(em.dof .== 10)
 
 # emmeans(model; levels=Dict(:age => 23))
 

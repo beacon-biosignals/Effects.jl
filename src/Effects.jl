@@ -3,6 +3,7 @@ module Effects
 using Base.Iterators: product
 using Combinatorics: combinations
 using DataFrames
+using Distributions
 using LinearAlgebra
 using Statistics
 using StatsModels
@@ -17,6 +18,6 @@ include("regressionmodel.jl")
 export effects, effects!
 
 include("emmeans.jl")
-export emmeans, empairs
+export emmeans, empairs, infinite_dof
 
 end # module
