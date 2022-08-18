@@ -66,6 +66,14 @@ end
 # R> summary(pairs(em))$SE
 # [1] 0.8031862 2.1342104 2.0501163
 
+# R> summary(pairs(em, adjust=NULL))$p.value
+# [1] 2.230652e-09 5.036095e-01 3.365674e-05
+
+# R> summary(pairs(em, adjust="bonferroni"))$p.value
+# [1] 6.691955e-09 1.000000e+00 1.009702e-04
+
+bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
+
 @testset "empairs" for m in [model, model_scaled]
     emp = empairs(m)
     @test names(emp) == ["sex", "age", "weight", "err"]
@@ -77,12 +85,15 @@ end
 
 
     @testset "dof" begin
+        emp = empairs(m; dof=infinite_dof)
+        @test all(emp.dof .== Inf)
+
         emp = empairs(m; dof=dof_residual)
         @test all(emp.dof .== 10)
         @test all(isapprox.(emp.t, [-19.921, -0.694, 7.082]; atol=0.001))
+        @test all(isapprox.(emp[!, "Pr(>|t|)"], [2.230652e-09, 5.036095e-01, 3.365674e-05]; rtol=0.001))
 
-        emp = empairs(m; dof=infinite_dof)
-        @test all(emp.dof .== Inf)
-        emp_adj = empairs(model; dof=infinite_dof, padjust=x -> x .* length(x))
+        emp_adj = empairs(m; dof=dof_residual, padjust=bonferroni)
+        @test all(isapprox.(emp_adj[!, "Pr(>|t|)"], [6.691955e-09, 1.0, 1.009702e-04]; rtol=0.001))
     end
 end
