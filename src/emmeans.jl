@@ -8,6 +8,7 @@
 function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
                  invlink=identity, levels=Dict(), dof=nothing)
     form = formula(model)
+    typical = mean
     # cat_terms = filter(x -> x isa CategoricalTerm, terms(form.rhs))
     # defaults =  Dict(tt.sym => tt.contrasts.levels for tt in cat_terms)
     defaults = Dict{Symbol, Vector}()
@@ -17,6 +18,11 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
             defaults[tt.sym] = tt.contrasts.levels
         elseif tt isa ContinuousTerm
             defaults[tt.sym] = [tt.mean]
+        # handle StandardizdPredictors and other wrapped Terms
+        elseif hasproperty(tt, :term) && tt.term isa ContinuousTerm
+            defaults[tt.term.sym] = [hasproperty(tt, :center) ? tt.center : tt.term.mean]
+        elseif !(tt isa Union{InterceptTerm, InteractionTerm})
+            defaults[tt.sym] = [0.0]
         end
     end
     levels = merge(defaults, levels) # prefer user specified levels
@@ -24,7 +30,7 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     eff_col = string(something(eff_col, _responsename(model)))
     err_col = string(err_col)
 
-    result = effects!(grid, model; eff_col, err_col, typical=mean, invlink)
+    result = effects!(grid, model; eff_col, err_col, typical, invlink)
     if !isnothing(dof)
         result[!, :dof] .= dof(model)
     end

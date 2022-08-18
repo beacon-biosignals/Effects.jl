@@ -1,7 +1,5 @@
-using DataFrames
 using Effects
 using GLM
-using LinearAlgebra
 using StableRNGs
 using StandardizedPredictors
 using Statistics
@@ -14,9 +12,14 @@ growthdata = DataFrame(; age=[13:20; 13:20],
                        weight=[range(100, 155; length=8); range(100, 125; length=8)] .+ randn(rng, 16))
 # now make unbalanced
 growthdata[(end-2):end, :sex] .= "other"
-model = lm(@formula(weight ~ 1 + sex * age), growthdata)
-
+model = lm(@formula(weight ~ 1 + sex * age), growthdata;
+            contrasts=Dict(:age => ZScore(), :sex => EffectsCoding()))
+model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
+                  contrasts=Dict(:age => Scale(), :sex => EffectsCoding()))
 # values from R
+# done using default contrasts and without scaling
+# which is a good test that these things are contrast invariant
+# (like they're supposed to be)
 # R> em <- emmeans(model, ~ 1 + sex * age)
 
 # R> em
@@ -33,16 +36,21 @@ model = lm(@formula(weight ~ 1 + sex * age), growthdata)
 
 # R> summary(em)$SE
 # [1] 0.7060401 0.3829040 2.0140411
+@testset "emmeans" for m in [model, model_scaled]
+    em = emmeans(m)
+    @test all(em.age .== 16.5)
+    @test all(isapprox.(em.weight, [111.6818, 127.6822, 113.1625]; atol=0.001))
+    @test all(isapprox.(em.err, [0.7060401, 0.3829040, 2.0140411]; atol=0.001))
+    @test !in("dof", names(em))
 
-em = emmeans(model)
-@test all(isapprox.(em.weight, [111.6818, 127.6822, 113.1625]; atol=0.001))
-@test all(isapprox.(em.err, [0.7060401, 0.3829040, 2.0140411]; atol=0.001))
-@test !in("dof", names(em))
+    @testset "dof" begin
+        em = emmeans(m; dof=dof_residual)
+        @test all(em.dof .== 10)
+    end
+    em = emmeans(m; levels=Dict(:age => 23))
+    @test all(em.age .== 23)
+end
 
-em = emmeans(model; dof=dof_residual)
-@test all(em.dof .== 10)
-
-# emmeans(model; levels=Dict(:age => 23))
 
 # R> pairs(em)
 #  contrast                       estimate    SE df t.ratio p.value
@@ -58,9 +66,23 @@ em = emmeans(model; dof=dof_residual)
 # R> summary(pairs(em))$SE
 # [1] 0.8031862 2.1342104 2.0501163
 
-emp = empairs(model)
-@test names(emp) == ["sex", "age", "weight", "err"]
-@test emp.sex == ["female > male", "female > other", "male > other"]
-@test all(emp.age .== 16.5)
-@test all(isapprox.(emp.weight, [-16.000323, -1.480698, 14.519625]; atol=0.001))
-@test all(isapprox.(emp.err, [0.8031862, 2.1342104, 2.0501163]; atol=0.001))
+@testset "empairs" for m in [model, model_scaled]
+    emp = empairs(m)
+    @test names(emp) == ["sex", "age", "weight", "err"]
+    @test emp.sex == ["female > male", "female > other", "male > other"]
+    @test all(emp.age .== 16.5)
+    @test all(isapprox.(emp.weight, [-16.000323, -1.480698, 14.519625]; atol=0.001))
+    @test all(isapprox.(emp.err, [0.8031862, 2.1342104, 2.0501163]; atol=0.001))
+    @test !in("dof", names(emp))
+
+
+    @testset "dof" begin
+        emp = empairs(m; dof=dof_residual)
+        @test all(emp.dof .== 10)
+        @test all(isapprox.(emp.t, [-19.921, -0.694, 7.082]; atol=0.001))
+
+        emp = empairs(m; dof=infinite_dof)
+        @test all(emp.dof .== Inf)
+        emp_adj = empairs(model; dof=infinite_dof, padjust=x -> x .* length(x))
+    end
+end
