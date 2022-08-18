@@ -19,6 +19,17 @@ By default, emmeans are computed for each level of each categorical variable
 along with the means of continuous variables. For centered terms, the center
 is used instead of the mean. Alternative levels can be specified with `levels`.
 
+`dof` is used to compute the associated degrees of freedom for a particular
+margin. For regression models, the appropriate degrees of freedom are
+the same degrees of freedom as used for the Wald tests on the coefficients.
+These are typically the residual degrees of freedom (see [`dof_residual`](@ref)).
+If `dof` is a function, then it is called on `model` and filled elementwise
+into the `dof` column. Alternatively, `dof` can be specified as a single number
+or vector of appropriate length. For example, in a mixed effect model with
+a large number of observations, `dof=Inf` may be appropriate.
+
+`invlink`, `eff_col` and `err_col` work exactly as in [`effects!`](@ref).
+
 Estimated marginal means are closely related to effects and can be viewed as a
 generalization of least-square means. The functionality here is a convenience
 wrapper for [`effects`](@ref) and maps onto the concept of least-square means
@@ -27,9 +38,7 @@ There are several extensions available to estimated marginal means, related
 to when the marginalization occurs and how cells are weighted, but these are
 not currently supported. The documentation for the [R package emmeans](https://cran.r-project.org/web/packages/emmeans/index.html)
 explains [the background in more depth](https://cran.r-project.org/web/packages/emmeans/vignettes/basics.html).
-
-
-"""# point people to dof_residual, infinite_dof, and maybe some notes on mixed models
+"""
 function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
                  invlink=identity, levels=Dict(), dof=nothing)
     form = formula(model)
@@ -69,6 +78,10 @@ end
 
 # TODO: mark this as experimental and subject to formatting, etc. changes
 # TODO point people to https://juliangehring.github.io/MultipleTesting.jl/stable/
+# !!! warning
+# There is a lot of sublety to the use of invlink and its implications for
+
+
 function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     # need to enforce that we're all the same type
     # (mixing string and symbol is an issue with Not
