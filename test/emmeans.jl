@@ -9,12 +9,13 @@ using Test
 
 rng = StableRNG(42)
 growthdata = DataFrame(; age=[13:20; 13:20],
-                       sex=repeat(["male", "female"], inner=8),
-                       weight=[range(100, 155; length=8); range(100, 125; length=8)] .+ randn(rng, 16))
+                       sex=repeat(["male", "female"]; inner=8),
+                       weight=[range(100, 155; length=8); range(100, 125; length=8)] .+
+                              randn(rng, 16))
 # now make unbalanced
-growthdata[(end-2):end, :sex] .= "other"
+growthdata[(end - 2):end, :sex] .= "other"
 model = lm(@formula(weight ~ 1 + sex * age), growthdata;
-            contrasts=Dict(:age => ZScore(), :sex => EffectsCoding()))
+           contrasts=Dict(:age => ZScore(), :sex => EffectsCoding()))
 model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
                   contrasts=Dict(:age => Scale(), :sex => EffectsCoding()))
 # values from R
@@ -51,7 +52,6 @@ model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
     @test all(em.age .== 23)
 end
 
-
 # R> pairs(em)
 #  contrast                       estimate    SE df t.ratio p.value
 #  female age16.5 - male age16.5    -16.00 0.803 10 -19.921  <.0001
@@ -82,7 +82,8 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
     @test all(isapprox.(emp.weight, [-16.000323, -1.480698, 14.519625]; atol=0.001))
     @test all(isapprox.(emp.err, [0.8031862, 2.1342104, 2.0501163]; atol=0.001))
     @test !in("dof", names(emp))
-    @test_logs (:warn, "padjust specified, but there are no p-values to adjust.") empairs(m; padjust=bonferroni)
+    @test_logs (:warn, "padjust specified, but there are no p-values to adjust.") empairs(m;
+                                                                                          padjust=bonferroni)
 
     @testset "dof" begin
         emp = empairs(m; dof=infinite_dof)
@@ -91,9 +92,11 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
         emp = empairs(m; dof=dof_residual)
         @test all(emp.dof .== 10)
         @test all(isapprox.(emp.t, [-19.921, -0.694, 7.082]; atol=0.001))
-        @test all(isapprox.(emp[!, "Pr(>|t|)"], [2.230652e-09, 5.036095e-01, 3.365674e-05]; rtol=0.001))
+        @test all(isapprox.(emp[!, "Pr(>|t|)"], [2.230652e-09, 5.036095e-01, 3.365674e-05];
+                            rtol=0.001))
 
         emp_adj = empairs(m; dof=dof_residual, padjust=bonferroni)
-        @test all(isapprox.(emp_adj[!, "Pr(>|t|)"], [6.691955e-09, 1.0, 1.009702e-04]; rtol=0.001))
+        @test all(isapprox.(emp_adj[!, "Pr(>|t|)"], [6.691955e-09, 1.0, 1.009702e-04];
+                            rtol=0.001))
     end
 end

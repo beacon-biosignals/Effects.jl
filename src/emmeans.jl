@@ -11,17 +11,17 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     typical = mean
     # cat_terms = filter(x -> x isa CategoricalTerm, terms(form.rhs))
     # defaults =  Dict(tt.sym => tt.contrasts.levels for tt in cat_terms)
-    defaults = Dict{Symbol, Vector}()
+    defaults = Dict{Symbol,Vector}()
     for tt in terms(form.rhs)
         # this kinda feels like a place for dispatch but....
         if tt isa CategoricalTerm
             defaults[tt.sym] = tt.contrasts.levels
         elseif tt isa ContinuousTerm
             defaults[tt.sym] = [tt.mean]
-        # handle StandardizdPredictors and other wrapped Terms
+            # handle StandardizdPredictors and other wrapped Terms
         elseif hasproperty(tt, :term) && tt.term isa ContinuousTerm
             defaults[tt.term.sym] = [hasproperty(tt, :center) ? tt.center : tt.term.mean]
-        elseif !(tt isa Union{InterceptTerm, InteractionTerm})
+        elseif !(tt isa Union{InterceptTerm,InteractionTerm})
             defaults[tt.sym] = [0.0]
         end
     end
@@ -38,7 +38,7 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
 end
 
 function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
-               invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
+                 invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
     eff_col = something(eff_col, _responsename(model))
     em = emmeans(model; eff_col, err_col, invlink, levels, dof)
     return empairs(em; eff_col, err_col, padjust)
@@ -61,7 +61,7 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     pairs = combinations(eachrow(df), 2)
     # TODO make this more efficient in allocations
     result_df = mapreduce(vcat, pairs) do (df1, df2)
-        result =  Dict{String, Union{String, Number}}()
+        result = Dict{String,Union{String,Number}}()
 
         for col in names(df1, Not(stats_cols))
             result[col] = if df1[col] == df2[col]
@@ -84,10 +84,11 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     select!(result_df, cols)
     if "dof" in stats_cols
         transform!(result_df, [eff_col, err_col] => ByRow(/) => "t")
-        transform!(result_df, [:dof, :t] => ByRow() do dof, t
-            p = 2 * cdf(TDist(dof), -abs(t))
-            return p
-        end => "Pr(>|t|)")
+        transform!(result_df,
+                   [:dof, :t] => ByRow() do dof, t
+                       p = 2 * cdf(TDist(dof), -abs(t))
+                       return p
+                   end => "Pr(>|t|)")
         transform!(result_df, "Pr(>|t|)" => padjust => "Pr(>|t|)")
     elseif padjust !== identity
         @warn "padjust specified, but there are no p-values to adjust."
