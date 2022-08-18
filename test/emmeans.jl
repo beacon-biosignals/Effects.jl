@@ -34,7 +34,6 @@ model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
 # R> summary(em)$emmean
 # [1] 111.6818 127.6822 113.1625
 
-
 # R> summary(em)$SE
 # [1] 0.7060401 0.3829040 2.0140411
 @testset "emmeans" for m in [model, model_scaled]
@@ -83,7 +82,7 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
     @test all(isapprox.(emp.weight, [-16.000323, -1.480698, 14.519625]; atol=0.001))
     @test all(isapprox.(emp.err, [0.8031862, 2.1342104, 2.0501163]; atol=0.001))
     @test !in("dof", names(emp))
-
+    @test_logs (:warn, "padjust specified, but there are no p-values to adjust.") empairs(m; padjust=bonferroni)
 
     @testset "dof" begin
         emp = empairs(m; dof=infinite_dof)

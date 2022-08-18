@@ -89,7 +89,8 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
             return p
         end => "Pr(>|t|)")
         transform!(result_df, "Pr(>|t|)" => padjust => "Pr(>|t|)")
+    elseif padjust !== identity
+        @warn "padjust specified, but there are no p-values to adjust."
     end
     return result_df
 end
-""
