@@ -9,7 +9,9 @@ makedocs(; modules=[Effects],
                                 canonical="https://beacon-biosignals.github.io/Effects.jl",
                                 assets=String[]),
          pages=["Home" => "index.md",
-                "API" => "api.md"])
+              #   "Partial Effects" => "remef.md",
+                "Estimated Marginal Means" => "emmeans.md",
+                "API" => "api.md",])
 
 deploydocs(; repo="github.com/beacon-biosignals/Effects.jl",
            devbranch="main",
