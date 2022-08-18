@@ -9,7 +9,27 @@ pooled_sem(sems...) = sqrt(sum(abs2, sems))
 # the establishment of the reference grid is different
 # we don't allow specifying the "typifier" here -- if you want that,
 # then choose a less full service function
-# point people to dof_residual, infinite_dof, and maybe some notes on mixed models
+"""
+    emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
+                    invlink=identity, levels=Dict(), dof=nothing)
+
+Compute estimated martginal means, a.k.a. least-squate (LS) means for a model.
+
+By default, emmeans are computed for each level of each categorical variable
+along with the means of continuous variables. For centered terms, the center
+is used instead of the mean. Alternative levels can be specified with `levels`.
+
+Estimated marginal means are closely related to effects and can be viewed as a
+generalization of least-square means. The functionality here is a convenience
+wrapper for [`effects`](@ref) and maps onto the concept of least-square means
+as presented in e.g. the [SAS documentation](https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.4/statug/statug_glimmix_syntax13.htm).
+There are several extensions available to estimated marginal means, related
+to when the marginalization occurs and how cells are weighted, but these are
+not currently supported. The documentation for the [R package emmeans](https://cran.r-project.org/web/packages/emmeans/index.html)
+explains [the background in more depth](https://cran.r-project.org/web/packages/emmeans/vignettes/basics.html).
+
+
+"""# point people to dof_residual, infinite_dof, and maybe some notes on mixed models
 function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
                  invlink=identity, levels=Dict(), dof=nothing)
     form = formula(model)
@@ -26,8 +46,6 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
             # handle StandardizdPredictors and other wrapped Terms
         elseif hasproperty(tt, :term) && tt.term isa ContinuousTerm
             defaults[tt.term.sym] = [hasproperty(tt, :center) ? tt.center : tt.term.mean]
-        elseif !(tt isa Union{InterceptTerm,InteractionTerm})
-            defaults[tt.sym] = [0.0]
         end
     end
     levels = merge(defaults, levels) # prefer user specified levels
