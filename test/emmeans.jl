@@ -86,7 +86,7 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
                                                                                           padjust=bonferroni)
 
     @testset "dof" begin
-        emp = empairs(m; dof=infinite_dof)
+        emp = empairs(m; dof=Inf)
         @test all(emp.dof .== Inf)
 
         emp = empairs(m; dof=dof_residual)

@@ -1,5 +1,10 @@
 # XXX what about marginalization weights?
 
+_dof(f::Function, model) = f(model)
+_dof(x, _) = x
+
+pooled_sem(sems...) = sqrt(sum(abs2, sems))
+
 # similar to effects (and the underlying math is the same) but
 # the establishment of the reference grid is different
 # we don't allow specifying the "typifier" here -- if you want that,
@@ -32,7 +37,7 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
 
     result = effects!(grid, model; eff_col, err_col, typical, invlink)
     if !isnothing(dof)
-        result[!, :dof] .= dof(model)
+        result[!, :dof] .= _dof(dof, model)
     end
     return result
 end
@@ -43,9 +48,6 @@ function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
     em = emmeans(model; eff_col, err_col, invlink, levels, dof)
     return empairs(em; eff_col, err_col, padjust)
 end
-
-pooled_sem(sems...) = sqrt(sum(abs2, sems))
-infinite_dof(::RegressionModel) = Inf
 
 # TODO: mark this as experimental and subject to formatting, etc. changes
 # TODO point people to https://juliangehring.github.io/MultipleTesting.jl/stable/
