@@ -1,5 +1,6 @@
 using Effects
 using GLM
+using MultipleTesting
 using StableRNGs
 using StandardizedPredictors
 using Statistics
