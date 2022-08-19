@@ -127,12 +127,6 @@ function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
     return empairs(em; eff_col, err_col, padjust)
 end
 
-# TODO: mark this as experimental and subject to formatting, etc. changes
-# TODO point people to https://juliangehring.github.io/MultipleTesting.jl/stable/
-# !!! warning
-# There is a lot of sublety to the use of invlink and its implications for
-
-
 function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     # need to enforce that we're all the same type
     # (mixing string and symbol is an issue with Not
