@@ -165,7 +165,7 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     # this is inefficient because we're generating values that we throw away
     # but it's a lot easier than trying to only generate the correct contrasts
     cols_with_contrasts = filter(col -> length(unique(result_df[!, col])) > 1,
-                                names(df, Not(stats_cols)))
+                                 names(df, Not(stats_cols)))
     length(cols_with_contrasts) > 1 &&
         subset!(result_df,
                 (col => ByRow(contains(" > ")) for col in cols_with_contrasts)...)
