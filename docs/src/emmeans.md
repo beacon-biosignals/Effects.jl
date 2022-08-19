@@ -26,7 +26,7 @@ grid = expand_grid(design)
 effects!(grid, model_scaled)
 ```
 
-`emmeans` is primarily a convenience function for computing calling effects at a convenient, pre-defined reference grid.
+`emmeans` is primarily a convenience function for computing effects on a convenient, pre-defined reference grid.
 Notably, `emmeans` includes information by default about all variables, even the ones analyzed
 only at their typical values.
 This differs from `effects!`:
@@ -112,7 +112,7 @@ These are discussed at length in the documentation for the R package `emmeans`.
 For example:
 
 - [the impact of transformations and link functions](https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html)
-- [derived covariates](https://cran.r-project.org/web/packages/emmeans/vignettes/basics.html#depcovs),  e.g., including both `x` and `x^2` in a model
+- [derived covariates](https://cran.r-project.org/web/packages/emmeans/vignettes/basics.html#depcovs), e.g., including both `x` and `x^2` in a model
 - [weighting of cells in computing means](https://cran.r-project.org/web/packages/emmeans/vignettes/basics.html#weights)
 
 All of these problems are fundamental to EM means as a technique and not particular to the software implementation.

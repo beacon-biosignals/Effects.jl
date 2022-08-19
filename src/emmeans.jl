@@ -22,7 +22,7 @@ pooled_sem(sems...) = sqrt(sum(abs2, sems))
     emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
             invlink=identity, levels=Dict(), dof=nothing)
 
-Compute estimated martginal means, a.k.a. least-squate (LS) means for a model.
+Compute estimated marginal means, a.k.a. least-square (LS) means for a model.
 
 By default, emmeans are computed for each level of each categorical variable
 along with the means of continuous variables. For centered terms, the center
