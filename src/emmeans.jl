@@ -52,8 +52,6 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
                  invlink=identity, levels=Dict(), dof=nothing)
     form = formula(model)
     typical = mean
-    # cat_terms = filter(x -> x isa CategoricalTerm, terms(form.rhs))
-    # defaults =  Dict(tt.sym => tt.contrasts.levels for tt in cat_terms)
     defaults = Dict{Symbol,Vector}()
     for tt in terms(get_matrix_term(form.rhs))
         # this kinda feels like a place for dispatch but....
