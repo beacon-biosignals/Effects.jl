@@ -104,6 +104,9 @@ If `padjust` is provided, then it is used to compute adjust the p-values for
 multiple comparisons. [`MultipleTesting.jl`](https://juliangehring.github.io/MultipleTesting.jl/stable/)
 provides a number of useful possibilities for this.
 
+!!! note
+    `padjust` is silently ignored if `dof` is not provided.
+
 !!! warning
     This feature is experimental and the precise column names and presentation of
     contrasts/differences may change without being considered breaking.
@@ -166,8 +169,6 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
                        return p
                    end => "Pr(>|t|)")
         transform!(result_df, "Pr(>|t|)" => padjust => "Pr(>|t|)")
-    elseif padjust !== identity
-        @warn "padjust specified, but there are no p-values to adjust."
     end
     return result_df
 end
