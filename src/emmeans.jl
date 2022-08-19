@@ -55,7 +55,7 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     # cat_terms = filter(x -> x isa CategoricalTerm, terms(form.rhs))
     # defaults =  Dict(tt.sym => tt.contrasts.levels for tt in cat_terms)
     defaults = Dict{Symbol,Vector}()
-    for tt in terms(form.rhs)
+    for tt in terms(get_matrix_term(form.rhs))
         # this kinda feels like a place for dispatch but....
         if tt isa CategoricalTerm
             defaults[tt.sym] = tt.contrasts.levels
@@ -152,11 +152,23 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
         result[err_col] = pooled_sem(df1[err_col], df2[err_col])
         if "dof" in names(df)
             df1["dof"] != df2["dof"] &&
-                throw(ArgumentError("Incompatible dof found for rows $(df1) and $(df2)"))
+                throw(ArgumentError("Pooled dof not suported: $(df1) and $(df2)"))
             result["dof"] = df1["dof"]
         end
         return DataFrame(result)
     end
+
+    # XXX post process to remove extra rows
+    # combinations() will generate pairs of rows that contrast in some but
+    # not all columns, but we don't want those rows for columns that actually
+    # have available contrasts, so we drop them here.
+    # this is inefficient because we're generating values that we throw away
+    # but it's a lot easier than trying to only generate the correct contrasts
+    cols_with_contrasts = filter(col -> length(unique(result_df[!, col])) > 1,
+                                names(df, Not(stats_cols)))
+    length(cols_with_contrasts) > 1 &&
+        subset!(result_df,
+                (col => ByRow(contains(" > ")) for col in cols_with_contrasts)...)
 
     cols = vcat(names(df, Not(stats_cols)), stats_cols)
     select!(result_df, cols)
