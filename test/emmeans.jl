@@ -82,8 +82,8 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
     @test all(isapprox.(emp.weight, [-16.000323, -1.480698, 14.519625]; atol=0.001))
     @test all(isapprox.(emp.err, [0.8031862, 2.1342104, 2.0501163]; atol=0.001))
     @test !in("dof", names(emp))
-    @test_logs (:warn, "padjust specified, but there are no p-values to adjust.") empairs(m;
-                                                                                          padjust=bonferroni)
+    @test_logs((:warn, "padjust specified, but there are no p-values to adjust."),
+               empairs(m; padjust=bonferroni))
 
     @testset "dof" begin
         emp = empairs(m; dof=Inf)
