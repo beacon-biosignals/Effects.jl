@@ -9,7 +9,8 @@ using StatsModels
 using Test
 
 rng = StableRNG(42)
-growthdata = DataFrame(; age=[13:20; 13:20],
+growthdata = DataFrame(;
+                       age=[13:20; 13:20],
                        sex=repeat(["male", "female"]; inner=8),
                        weight=[range(100, 155; length=8); range(100, 125; length=8)] .+
                               randn(rng, 16))
