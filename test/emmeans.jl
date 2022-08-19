@@ -14,10 +14,9 @@ growthdata = DataFrame(; age=[13:20; 13:20],
                               randn(rng, 16))
 # now make unbalanced
 growthdata[(end - 2):end, :sex] .= "other"
-model = lm(@formula(weight ~ 1 + sex * age), growthdata;
-           contrasts=Dict(:age => ZScore(), :sex => EffectsCoding()))
+model = lm(@formula(weight ~ 1 + sex * age), growthdata)
 model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
-                  contrasts=Dict(:age => Scale(), :sex => EffectsCoding()))
+                  contrasts=Dict(:age => ZScore(), :sex => EffectsCoding()))
 # values from R
 # done using default contrasts and without scaling
 # which is a good test that these things are contrast invariant
