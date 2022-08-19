@@ -67,23 +67,29 @@ These degrees of freedom correspond to the denominator degrees of freedom in the
 
 For mixed-effects models, the denominator degrees of freedom are not clearly defined[^GLMMFAQ] (nor is it clear that the asymptotic distribution is even F for anything beyond a few special cases[^Bates2006]).
 The fundamental problem is that mixed models have in some sense "more" degrees of freedom than you would expect from naively counting parameters -- the conditional modes (BLUPs) aren't technically parameters, but do somehow contribute to increasing the amount of wiggle-room that the model has for adapting to the data.
-We can try a few different approaches and see how they differ:
+We can try a few different approaches and see how they differ.
+
+We'll use a simplified version of the model above:
+```@example emmeans
+mixed_form2 = @formula(rt_trunc ~ 1 + prec * load + (1|item) + (1|subj))
+mixed_model2 = fit(MixedModel, mixed_form2, kb07; progress=false)
+```
 
 - the default definition in MixedModels.jl for `dof_residual(model)` is simply `nobs(model) - dof(model)`
 ```@example emmeans
-empairs(mixed_model; dof=dof_residual)
+empairs(mixed_model2; dof=dof_residual)
 ```
 - the leverage formula, given by `nobs(model) - sum(leverage(model))` (for classical linear models, this is exactly the same as (1))
 ```@example emmeans
-empairs(mixed_model; dof=nobs(mixed_model) - sum(leverage(mixed_model)))
+empairs(mixed_model2; dof=nobs(mixed_model) - sum(leverage(mixed_model)))
 ```
 - counting each conditional mode as a parameter (this is the most conservative value because it has the smallest degrees of freedom)
 ```@example emmeans
-empairs(mixed_model; dof=nobs(mixed_model) - sum(size(mixed_model)[2:3]))
+empairs(mixed_model2; dof=nobs(mixed_model) - sum(size(mixed_model)[2:3]))
 ```
 - the infinite degrees of freedom (i.e. interpret $t$ as $z$ and $F$ as $\chi^2$ )
 ```@example emmeans
-empairs(mixed_model; dof=Inf)
+empairs(mixed_model2; dof=Inf)
 ```
 
 These values are all very similar to each other, because the $t$ distribution rapidly converges to the $z$ distribution for $t > 30$ and so amount of probability mass in the tails does not change much for a model with more than a thousand observations and 30+ levels of each grouping variable.
@@ -99,7 +105,7 @@ We can also provide a correction method to be applied to the p-values.
 ```@example emmeans
 using MultipleTesting
 bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
-empairs(mixed_model; dof=Inf, padjust=bonferroni)
+empairs(mixed_model2; dof=Inf, padjust=bonferroni)
 ```
 
 [^GLMMFAQ]: [Why doesn’t lme4 display denominator degrees of freedom/p values? What other options do I have?](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#why-doesnt-lme4-display-denominator-degrees-of-freedomp-values-what-other-options-do-i-have)
