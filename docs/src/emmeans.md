@@ -93,10 +93,6 @@ empairs(mixed_model2; dof=Inf)
 ```
 
 These values are all very similar to each other, because the $t$ distribution rapidly converges to the $z$ distribution for $t > 30$ and so amount of probability mass in the tails does not change much for a model with more than a thousand observations and 30+ levels of each grouping variable.
-<!-- XXX
-should add documentation about using Satterthwaite and Kenward-Roger but
-there's not a Julia implementation of those things yet, so not high priority
--->
 
 ### Multiple Comparisons Correction
 
