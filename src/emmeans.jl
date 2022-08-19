@@ -152,7 +152,7 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
         result[err_col] = pooled_sem(df1[err_col], df2[err_col])
         if "dof" in names(df)
             df1["dof"] != df2["dof"] &&
-                throw(ArgumentError("Pooled dof not suported: $(df1) and $(df2)"))
+                throw(ArgumentError("Pooled dof not supported: $(df1) and $(df2)"))
             result["dof"] = df1["dof"]
         end
         return DataFrame(result)
