@@ -87,7 +87,7 @@ The method for `AbstractDataFrame` acts on the results of [`emmeans`](@ref),
 while the method for `RegressionModel` is a convenience wrapper that calls
 `emmeans` internally.
 
-Keyword arguments are generally same as `emmeans`.
+The keyword arguments are generally the same as `emmeans`.
 
 By default, pairs are computed for all combinations of categorical variables and
 the means/centers of continuous variables. The contrast for a pair "a" vs "b"
