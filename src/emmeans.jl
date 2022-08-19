@@ -3,6 +3,15 @@
 _dof(f::Function, model) = f(model)
 _dof(x, _) = x
 
+"""
+    pooled_sem(sems...)
+
+Compute the pooled standard error of the mean.
+
+This corresponds to the square root of the sum of the
+the squared SEMs, which in turn corresponds to the weighted root-mean-square
+of the underlying standard deviations.
+"""
 pooled_sem(sems...) = sqrt(sum(abs2, sems))
 
 # similar to effects (and the underlying math is the same) but
@@ -11,7 +20,7 @@ pooled_sem(sems...) = sqrt(sum(abs2, sems))
 # then choose a less full service function
 """
     emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
-                    invlink=identity, levels=Dict(), dof=nothing)
+            invlink=identity, levels=Dict(), dof=nothing)
 
 Compute estimated martginal means, a.k.a. least-squate (LS) means for a model.
 
@@ -22,7 +31,7 @@ is used instead of the mean. Alternative levels can be specified with `levels`.
 `dof` is used to compute the associated degrees of freedom for a particular
 margin. For regression models, the appropriate degrees of freedom are
 the same degrees of freedom as used for the Wald tests on the coefficients.
-These are typically the residual degrees of freedom (see [`dof_residual`](@ref)).
+These are typically the residual degrees of freedom (e.g., via `dof_residual`).
 If `dof` is a function, then it is called on `model` and filled elementwise
 into the `dof` column. Alternatively, `dof` can be specified as a single number
 or vector of appropriate length. For example, in a mixed effect model with
@@ -69,6 +78,48 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     return result
 end
 
+"""
+    empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
+            invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
+    empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
+
+Compute pairwise differences of estimated marginal means.
+
+The method for `AbstractDataFrame` acts on the results of [`emmeans`](@ref),
+while the method for `RegressionModel` is a convenience wrapper that calls
+`emmeans` internally.
+
+Keyword arguments are generally same as `emmeans`.
+
+By default, pairs are computed for all combinations of categorical variables and
+the means/centers of continuous variables. The contrast for a pair "a" vs "b"
+is represented in the column for the contrasted variable with `a > b`. For
+variables that are the same within a pair (e.g., a continuous variable), the sole
+value is displayed as is.
+
+If `dof` is not `nothing`, then p-values are also computed using a t-distribution
+with the resulting degrees of freedom. The results for `dof=Inf` correspond to
+using a z-distribution, but the column names in the returned dataframe remain
+`t` and `Pr(>|t|)`.
+
+If `padjust` is provided, then it is used to compute adjust the p-values for
+multiple comparisons. [`MultipleTesting.jl`](https://juliangehring.github.io/MultipleTesting.jl/stable/)
+provides a number of useful possibilities for this.
+
+!!! warning
+    This feature is experimental and the precise column names and presentation of
+    contrasts/differences may change without being considered breaking.
+
+!!! warning
+    The use of `invlink` is subject to a number of interpretation subtleties.
+    The EM means are computed on the scale of the linear predictor, then
+    backtransformed to the transformed scale. The associated errors on the
+    transformed scale are computed via the difference method. These estimates
+    and errors are then used to compute the pairs. Test statistics are
+    computed on the scale of these pairs. In general, these will not be the same
+    as test statistics computed on the original scale. These subleties are
+    discussed in [the documentation for the R package `emmeans`](https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html).
+"""
 function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
                  invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
     eff_col = something(eff_col, _responsename(model))

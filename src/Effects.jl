@@ -5,6 +5,7 @@ using Combinatorics: combinations
 using DataFrames
 using Distributions
 using LinearAlgebra
+using StatsAPI
 using Statistics
 using StatsModels
 using StatsBase
