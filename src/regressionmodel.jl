@@ -84,7 +84,7 @@ end
 
 Compute a fully crossed reference grid.
 
-Design can be either a `NamedTuple` or a `Dict`, where the keys represent
+`design` can be either a `NamedTuple` or a `Dict`, where the keys represent
 the variables, i.e., column names in the resulting grid and the values are
 vectors of possible values that each variable can take on.
 
