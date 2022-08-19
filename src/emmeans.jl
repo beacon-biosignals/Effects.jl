@@ -114,7 +114,7 @@ provides a number of useful possibilities for this.
 !!! warning
     The use of `invlink` is subject to a number of interpretation subtleties.
     The EM means are computed on the scale of the linear predictor, then
-    backtransformed to the transformed scale. The associated errors on the
+    transformed to the scale of `invlink`. The associated errors on the
     transformed scale are computed via the difference method. These estimates
     and errors are then used to compute the pairs. Test statistics are
     computed on the scale of these pairs. In general, these will not be the same
