@@ -39,8 +39,8 @@ a large number of observations, `dof=Inf` may be appropriate.
 
 `invlink`, `eff_col` and `err_col` work exactly as in [`effects!`](@ref).
 
-Estimated marginal means are closely related to effects and can be viewed as a
-generalization of least-square means. The functionality here is a convenience
+Estimated marginal means are closely related to effects and are also known as
+least-square means. The functionality here is a convenience
 wrapper for [`effects`](@ref) and maps onto the concept of least-square means
 as presented in e.g. the [SAS documentation](https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.4/statug/statug_glimmix_syntax13.htm).
 There are several extensions available to estimated marginal means, related
