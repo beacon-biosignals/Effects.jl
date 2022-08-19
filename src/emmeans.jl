@@ -67,7 +67,7 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
         end
     end
     levels = merge(defaults, levels) # prefer user specified levels
-    grid = _reference_grid(levels)
+    grid = expand_grid(levels)
     eff_col = string(something(eff_col, _responsename(model)))
     err_col = string(err_col)
 

@@ -79,7 +79,30 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     # return (; reference_grid..., depvar => eff, err_col => err)
 end
 
-function _reference_grid(design)
+"""
+    expand_grid(design)
+
+Compute a fully crossed reference grid.
+
+Design can be either a `NamedTuple` or a `Dict`, where the keys represent
+the variables, i.e., column names in the resulting grid and the values are
+vectors of possible values that each variable can take on.
+
+```julia
+julia> expand_grid(Dict(:x => ["a", "b"], :y => 1:3))
+6×2 DataFrame
+ Row │ y      x
+     │ Int64  String
+─────┼───────────────
+   1 │     1  a
+   2 │     2  a
+   3 │     3  a
+   4 │     1  b
+   5 │     2  b
+   6 │     3  b
+```
+"""
+function expand_grid(design)
     colnames = tuple(keys(design)...)
     rowtab = NamedTuple{colnames}.(product(values(design)...))
 
@@ -103,7 +126,7 @@ function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper, invlink=identity)
     # TODO: add support for confidence intervals instead of std error
-    grid = _reference_grid(design)
+    grid = expand_grid(design)
     dv = something(eff_col, _responsename(model))
     effects!(grid, model; eff_col=dv, err_col, typical, invlink)
     # XXX DataFrames dependency
