@@ -11,3 +11,7 @@ end
 @testset "delta method" begin
     include("delta_method.jl")
 end
+
+@testset "emmeans" begin
+    include("emmeans.jl")
+end

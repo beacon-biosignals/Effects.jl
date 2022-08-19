@@ -6,7 +6,6 @@ using MixedModels: MixedModel, ReMat
 using Test
 
 using Effects: get_matrix_term, typicalterm, typify, TypicalTerm
-using Effects: _reference_grid
 
 x = collect(-10:19)
 dat = DataFrame(; x=x,
@@ -54,7 +53,7 @@ end
     end
 
     # categorical var with fewer levels in refgrid as in original
-    refgrid = _reference_grid(Dict(:x => [13.0, 15.0], :z => ["C"]))
+    refgrid = expand_grid(Dict(:x => [13.0, 15.0], :z => ["C"]))
     typicalf = typify(refgrid, f, X)
     # first column is the intercept
     # second column should be the x-values
@@ -66,7 +65,7 @@ end
                                                   1 15 0 1 0 15]
 
     # typical that isn't mean
-    refgrid = _reference_grid(Dict(:z => ["A", "B"]))
+    refgrid = expand_grid(Dict(:z => ["A", "B"]))
     # typical should return a scalar
     @test_throws ArgumentError typify(refgrid, f, X; typical=extrema)
     typicalf = typify(refgrid, f, X; typical=minimum)
@@ -83,7 +82,7 @@ end
     f = apply_schema(form, schema(form, dat, Dict(:z => DummyCoding())))
     rhs = f.rhs
     y, X = modelcols(f, dat)
-    refgrid = _reference_grid(Dict(:x => [π]))
+    refgrid = expand_grid(Dict(:x => [π]))
     typicalf = typify(refgrid, f, X)
     # first col is intercept
     # second col is 3.14
@@ -98,7 +97,7 @@ end
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
     y, X = modelcols(f, dat)
-    refgrid = _reference_grid(Dict(:x => [π]))
+    refgrid = expand_grid(Dict(:x => [π]))
     @test_throws ArgumentError typify(refgrid, f, X)
 end
 
@@ -122,16 +121,16 @@ end
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
     X = modelcols(rhs, dat)
-    refgrid = _reference_grid(Dict(:x => [π]))
+    refgrid = expand_grid(Dict(:x => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈
           Float64[π mean(log.(dat.w)) mean(sqrt.(dat.w))]
-    refgrid = _reference_grid(Dict(:x => [π], :w => [π]))
+    refgrid = expand_grid(Dict(:x => [π], :w => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π)]
 
     form = @formula(y ~ 0 + x + x^2 + x^3)
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
     X = modelcols(rhs, dat)
-    refgrid = _reference_grid(Dict(:x => [π]))
+    refgrid = expand_grid(Dict(:x => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π π^2 π^3]
 end
