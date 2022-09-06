@@ -1,0 +1,22 @@
+  {
+    "license": "mit-license", 
+    "title": "beacon-biosignals/Effects.jl: Effects Prediction for Linear and Generalized Linear Models", 
+    "upload_type": "software", 
+    "creators": [
+        {
+            "affiliation": "Beacon Biosignals", 
+            "name": "Alday, Phillip M."
+            "orcid": "0000-0002-9984-5745"
+        }, 
+        {
+            "affiliation": "Beacon Biosignals", 
+            "name": "Kleinschmidt, Dave F."
+            "orcid": "0000-0002-7442-2762"          
+        }, 
+        {
+            "affiliation": "Beacon Biosignals", 
+            "name": "Arslan, Alexander R."
+            "orcid": "0000-0002-4132-068X"
+        }
+    ], 
+}
