@@ -6,6 +6,7 @@ Effects Prediction for Linear and Generalized Linear models
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://beacon-biosignals.github.io/Effects.jl/dev)
 [![Build Status][build-img]][build-url]
 [![codecov](https://codecov.io/gh/beacon-biosignals/Effects.jl/branch/main/graph/badge.svg?token=AAK9265TXH)](https://codecov.io/gh/beacon-biosignals/Effects.jl)
+[![DOI](https://zenodo.org/badge/323392527.svg)](https://zenodo.org/badge/latestdoi/323392527)
 
 [build-img]: https://github.com/beacon-biosignals/Effects.jl/workflows/CI/badge.svg
 [build-url]: https://github.com/beacon-biosignals/Effects.jl/actions
