@@ -1,6 +1,8 @@
 {
+    "access_right": "open",
     "license": "MIT",
     "title": "beacon-biosignals/Effects.jl: Effects Prediction for Linear and Generalized Linear Models",
+    "description": "A Julia package providing effects prediction for linear and generalized linear models",
     "upload_type": "software",
     "creators": [
         {
