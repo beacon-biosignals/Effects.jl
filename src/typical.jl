@@ -72,8 +72,7 @@ function typify(refgrid, model_formula::FormulaTerm,
     func_terms = [filter(tt -> isa(tt, FunctionTerm), matrix_term.terms)...]
     for term in [urterms; func_terms]
         if !any(et -> _symequal(et, term), effects_terms)
-            typical_terms[term] = typicalterm(term, matrix_term, model_matrix;
-                                              typical=typical)
+            typical_terms[term] = typicalterm(term, matrix_term, model_matrix, typical)
         end
     end
 
