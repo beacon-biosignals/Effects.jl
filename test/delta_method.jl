@@ -46,26 +46,30 @@ end
     invlink = Base.Fix1(GLM.linkinv, Link(model.model))
     design = Dict(:Extraversion => [13],
                   :Neuroticism => [16])
-    eff = effects(design, model; invlink)
     X = [1.0 13.0 16.0 13 * 16]
-    # compare with results from GLM.predict
-    pred = DataFrame(predict(model.model, X;
-                             interval=:confidence,
-                             interval_method=:delta,
-                             level=0.68)) # 0.68 is 1 normal quantile, which is just the SE
-    @test all(pred.prediction .≈ eff.vol)
-    @test all(isapprox.(pred.lower, eff.lower; atol=0.001))
-    @test all(isapprox.(pred.upper, eff.upper; atol=0.001))
 
-    eff_trans = effects(design, model)
-    transform!(eff_trans,
-               :vol => ByRow(invlink),
-               :lower => ByRow(invlink),
-               :upper => ByRow(invlink); renamecols=false)
-    # for this model, things play out nicely
-    @test all(eff_trans.vol .≈ eff.vol)
-    @test all(isapprox.(eff_trans.lower, eff.lower; atol=0.001))
-    @test all(isapprox.(eff_trans.upper, eff.upper; atol=0.001))
+    for level in [0.68, 0.95]
+        eff = effects(design, model; invlink, level)
+
+        # compare with results from GLM.predict
+        pred = DataFrame(predict(model.model, X;
+                                 interval=:confidence,
+                                 interval_method=:delta,
+                                 level))
+        @test all(pred.prediction .≈ eff.vol)
+        @test all(isapprox.(pred.lower, eff.lower; atol=0.001))
+        @test all(isapprox.(pred.upper, eff.upper; atol=0.001))
+
+        eff_trans = effects(design, model; level)
+        transform!(eff_trans,
+                   :vol => ByRow(invlink),
+                   :lower => ByRow(invlink),
+                   :upper => ByRow(invlink); renamecols=false)
+        # for this model, things play out nicely
+        @test all(eff_trans.vol .≈ eff.vol)
+        @test all(isapprox.(eff_trans.lower, eff.lower; atol=0.001))
+        @test all(isapprox.(eff_trans.upper, eff.upper; atol=0.001))
+    end
 
     # compare with results from emmeans in R
     # emmeans(model, ~ neuroticism * extraversion, level=0.68)
