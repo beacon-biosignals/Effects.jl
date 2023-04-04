@@ -5,6 +5,7 @@ using StatsModels
 using MixedModels: MixedModel, ReMat
 using Test
 
+using DataStructures: DefaultDict
 using Effects: get_matrix_term, typicalterm, typify, TypicalTerm
 
 x = collect(-10:19)
@@ -99,6 +100,50 @@ end
     y, X = modelcols(f, dat)
     refgrid = expand_grid(Dict(:x => [π]))
     @test_throws ArgumentError typify(refgrid, f, X)
+
+    @testset "dictionary typicals" begin
+        typical_fun = maximum
+        # need to wrap this in a lambda because functions are treating specially
+        typical_dict = DefaultDict(() -> typical_fun)
+
+        form = @formula(y ~ 1 + x * z)
+        f = apply_schema(form, schema(form, dat, Dict(:z => EffectsCoding())))
+        rhs = f.rhs
+        y, X = modelcols(f, dat)
+        refgrid = expand_grid(Dict(:z => ["A", "B"]))
+        # since we're not specifying anything in the default dict, we always
+        # hit the default and these should give the same result
+        tf = modelcols(typify(refgrid, f, X; typical=typical_fun), refgrid)
+        td = modelcols(typify(refgrid, f, X; typical=typical_dict), refgrid)
+        @test tf == td
+
+        form = @formula(y ~ 1 + w + x + z)
+        f = apply_schema(form, schema(form, dat))
+        rhs = f.rhs
+        y, X = modelcols(f, dat)
+        typical_dict[:w] = minimum
+        td = modelcols(typify(refgrid, f, X; typical=typical_dict), refgrid)
+        minw = minimum(dat.w)
+        maxx = maximum(dat.x)
+        # only checking the first level
+        expected = [1.0 minw maxx 0.0 0.0
+                    1.0 minw maxx 1.0 0.0]
+        @test td == expected
+
+        # without using a default dict, make sure we don't need
+        # to specify the intercept
+        form = @formula(y ~ 1 + x + z)
+        f = apply_schema(form, schema(form, dat))
+        rhs = f.rhs
+        y, X = modelcols(f, dat)
+        td = modelcols(typify(refgrid, f, X; typical=Dict(:x => mean)), refgrid)
+        meanx = mean(dat.x)
+        @test td == [1.0 meanx 0.0 0.0
+                     1.0 meanx 1.0 0.0]
+
+        # this should error on :x, not :1
+        @test_throws KeyError(:x) typify(refgrid, f, X; typical=Dict())
+    end
 end
 
 @testset "_trmequal" begin
