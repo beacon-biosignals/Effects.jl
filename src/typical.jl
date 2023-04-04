@@ -103,7 +103,8 @@ function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
            t1.forig == t2.forig
 end
 
-@deprecate typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean) typicalterm(term, context, model_matrix, typical)
+@deprecate(typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean),
+           typicalterm(term, context, model_matrix, typical))
 
 # the single function route
 function typicalterm(term::AbstractTerm, context::MatrixTerm,
@@ -122,7 +123,8 @@ end
 # in case somebody has symbols as keys but a more general container type
 function typicalterm(term::AbstractTerm, context::MatrixTerm,
                      model_matrix, typical::AbstractDict)
-    eltype(keys(typical)) == Symbol || throw(ArgumentError("keys for `typical` Dict should be `Symbol`s"))
+    eltype(keys(typical)) == Symbol ||
+        throw(ArgumentError("keys for `typical` Dict should be `Symbol`s"))
     ts = _termsyms(term)
     length(ts) == 1 ||
         throw(ArgumentError("Using dictionary-based typical terms isn't " *
