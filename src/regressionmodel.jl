@@ -144,7 +144,7 @@ end
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
             lower_col=:lower, upper_col=:upper, invlink=identity,
-            vcov=StatsBase.vcov)
+            vcov=StatsBase.vcov, level=nothing)
 
 Compute the `effects` as specified by the `design`.
 
@@ -152,19 +152,25 @@ This is a convenience wrapper for [`effects!`](@ref). Instead of specifying a
 reference grid, a dictionary containing the levels/values of each predictor
 is specified. This is then expanded into a reference grid representing a
 fully-crossed design. Additionally, two extra columns are created representing
-the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
+the lower and upper edges of the confidence interval.
+The default `level=nothing` corresponds to [resp-err, resp+err], while `level=0.95`
+corresponds to the 95% confidence interval.
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper, invlink=identity,
-                 vcov=StatsBase.vcov)
-    # TODO: add support for confidence intervals instead of std error
+                 vcov=StatsBase.vcov, level=nothing)
     grid = expand_grid(design)
     dv = something(eff_col, _responsename(model))
     effects!(grid, model; eff_col=dv, err_col, typical, invlink, vcov)
+    # level=0.68 is approximately one standard error, but it's just enough
+    # off to create all sorts of problems with tests and
+    # cause all our tests to fail, which means it would create problems for
+    # users, so we special case it to maintain legacy behavior
+    level_scale = isnothing(level) ? 1 : sqrt(quantile(Chisq(1), level))
     # XXX DataFrames dependency
-    grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
-    grid[!, upper_col] = grid[!, dv] + grid[!, err_col]
+    grid[!, lower_col] = grid[!, dv] - grid[!, err_col] * level_scale
+    grid[!, upper_col] = grid[!, dv] + grid[!, err_col] * level_scale
     return grid
     # up_low = let dv = getproperty(reference_grid, dv), err = getproperty(reference_grid, err_col)
     #     (; lower_col => dv .- err, upper_col => dv .+ err)
