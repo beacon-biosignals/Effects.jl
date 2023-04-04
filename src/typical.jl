@@ -123,8 +123,6 @@ end
 # in case somebody has symbols as keys but a more general container type
 function typicalterm(term::AbstractTerm, context::MatrixTerm,
                      model_matrix, typical::AbstractDict)
-    eltype(keys(typical)) == Symbol ||
-        throw(ArgumentError("keys for `typical` Dict should be `Symbol`s"))
     ts = _termsyms(term)
     length(ts) == 1 ||
         throw(ArgumentError("Using dictionary-based typical terms isn't " *
