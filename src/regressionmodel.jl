@@ -12,7 +12,7 @@ is specified via `typical`. Note that this is also applied to categorical contra
 thus yielding an average of the contrast, weighted by the balance of levels in the data
 set used to fit the model.
 
-`typical` can either be a single, scalar-valued function or a dictionary
+`typical` can either be a single, scalar-valued function (e.g. `mean`) or a dictionary
 matching term symbols to scalar-valued functions. The use of a dictionary
 allows specifying different `typical` functions for different input variables.
 In this case, `typical` functions must be provided for all term variables
