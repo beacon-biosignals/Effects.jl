@@ -131,7 +131,6 @@ function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
                  lower_col=:lower, upper_col=:upper, invlink=identity,
                  vcov=StatsBase.vcov, level=nothing)
-    # TODO: add support for confidence intervals instead of std error
     grid = expand_grid(design)
     dv = something(eff_col, _responsename(model))
     effects!(grid, model; eff_col=dv, err_col, typical, invlink, vcov)
