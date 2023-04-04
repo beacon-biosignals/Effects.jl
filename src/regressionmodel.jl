@@ -144,7 +144,7 @@ end
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
             lower_col=:lower, upper_col=:upper, invlink=identity,
-            vcov=StatsBase.vcov, level=0.68)
+            vcov=StatsBase.vcov, level=nothing)
 
 Compute the `effects` as specified by the `design`.
 
