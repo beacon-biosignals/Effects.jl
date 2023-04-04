@@ -39,6 +39,20 @@ Pointwise standard errors are written into the column specified by `err_col`.
     automatic differentiation. This means that the `invlink` function must be
     differentiable and should not involve inplace operations.
 
+Effects are computed using the model's variance-covariance matrix, which is
+computed by default using `StatsBas.vcov`. Alternative methods such as the
+sandwich estimator or robust estimators can be used by specifying `vcov`,
+which should be a function of a single argument (the model) returning
+the estimated variance-covariance matrix.
+[Vcov.jl](https://github.com/FixedEffects/Vcov.jl) and [CovarianceMatrices.jl](https://github.com/gragusa/CovarianceMatrices.jl)
+provide several possibilities as functions of multiple arguments and so it
+is necessary to curry when using these functions. For example
+```julia
+using Vcov
+myvcov(x) = Base.Fix2(vcov, Vcov.robust())
+```
+
+
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
 used to fit the model; using other contrasts will lead to undefined behavior.

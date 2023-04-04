@@ -7,6 +7,7 @@ using StandardizedPredictors
 using Statistics
 using StatsModels
 using Test
+using Vcov
 
 b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
 
@@ -29,6 +30,10 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
     @testset "custom vcov" begin
         eff2 = effects(design, model; vcov=x -> 2 * vcov(x))
         @test first(eff2.err) ≈ only(sqrt(pred * 2vcov(model) * pred'))
+        # table regression model *grumble*
+        effrob = effects(design, model; vcov=m -> vcov(m.model, Vcov.robust()))
+        # robust errors are larger
+        @test effrob.err > eff.err
     end
 
     @testset "contrasts" begin
