@@ -1,6 +1,7 @@
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
-             eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
+             eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
+             vcov=StatsBase.vcov)
 
 Compute the `effects` as specified in `formula`.
 
@@ -53,6 +54,20 @@ Pointwise standard errors are written into the column specified by `err_col`.
     automatic differentiation. This means that the `invlink` function must be
     differentiable and should not involve inplace operations.
 
+Effects are computed using the model's variance-covariance matrix, which is
+computed by default using `StatsBas.vcov`. Alternative methods such as the
+sandwich estimator or robust estimators can be used by specifying `vcov`,
+which should be a function of a single argument (the model) returning
+the estimated variance-covariance matrix.
+[Vcov.jl](https://github.com/FixedEffects/Vcov.jl) and [CovarianceMatrices.jl](https://github.com/gragusa/CovarianceMatrices.jl)
+provide several possibilities as functions of multiple arguments and so it
+is necessary to curry when using these functions. For example
+```julia
+using Vcov
+myvcov(x) = Base.Fix2(vcov, Vcov.robust())
+```
+
+
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
 used to fit the model; using other contrasts will lead to undefined behavior.
@@ -74,7 +89,8 @@ Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
-                  eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
+                  eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
+                  vcov=StatsBase.vcov)
     # right now this is written for a RegressionModel and implicitly assumes
     # the existence of an appropriate formula method
     form = formula(model)
@@ -127,7 +143,8 @@ end
 """
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
-            lower_col=:lower, upper_col=:upper, invlink=identity)
+            lower_col=:lower, upper_col=:upper, invlink=identity,
+            vcov=StatsBase.vcov)
 
 Compute the `effects` as specified by the `design`.
 
@@ -139,11 +156,12 @@ the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
-                 lower_col=:lower, upper_col=:upper, invlink=identity)
+                 lower_col=:lower, upper_col=:upper, invlink=identity,
+                 vcov=StatsBase.vcov)
     # TODO: add support for confidence intervals instead of std error
     grid = expand_grid(design)
     dv = something(eff_col, _responsename(model))
-    effects!(grid, model; eff_col=dv, err_col, typical, invlink)
+    effects!(grid, model; eff_col=dv, err_col, typical, invlink, vcov)
     # XXX DataFrames dependency
     grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
     grid[!, upper_col] = grid[!, dv] + grid[!, err_col]
