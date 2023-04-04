@@ -141,5 +141,5 @@ end
 # for the intercept when using the dict route
 function typicalterm(term::InterceptTerm, context::MatrixTerm,
                      model_matrix, typical::AbstractDict)
-return TypicalTerm(term, [1.0])
+    return TypicalTerm(term, [1.0])
 end
