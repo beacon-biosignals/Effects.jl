@@ -13,6 +13,21 @@ is specified via `typical`. Note that this is also applied to categorical contra
 thus yielding an average of the contrast, weighted by the balance of levels in the data
 set used to fit the model.
 
+`typical` can either be a single, scalar-valued function (e.g. `mean`) or a dictionary
+matching term symbols to scalar-valued functions. The use of a dictionary
+allows specifying different `typical` functions for different input variables.
+In this case, `typical` functions must be provided for all term variables
+except the intercept. If there is a single term that should be "typified"
+differently than others, then the use of `DataStructures.DefaultDict` may
+be useful to create a default `typical` value with only the exception
+explicitly specified. For example:
+
+```julia
+using DataStructures
+typical = DefaultDict(() -> mean)  # default to x -> mean(x)
+typical[:sex] = v -> 0.0           # typical value for :sex
+```
+
 By default, the column corresponding to the response variable in the formula
 is overwritten with the effects, but an alternative column for the effects can
 be specified by `eff_col`. Note that `eff_col` is determined first by trying

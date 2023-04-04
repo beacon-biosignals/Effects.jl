@@ -72,8 +72,7 @@ function typify(refgrid, model_formula::FormulaTerm,
     func_terms = [filter(tt -> isa(tt, FunctionTerm), matrix_term.terms)...]
     for term in [urterms; func_terms]
         if !any(et -> _symequal(et, term), effects_terms)
-            typical_terms[term] = typicalterm(term, matrix_term, model_matrix;
-                                              typical=typical)
+            typical_terms[term] = typicalterm(term, matrix_term, model_matrix, typical)
         end
     end
 
@@ -103,7 +102,12 @@ function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
            t1.forig == t2.forig
 end
 
-function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean)
+@deprecate(typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean),
+           typicalterm(term, context, model_matrix, typical))
+
+# the single function route
+function typicalterm(term::AbstractTerm, context::MatrixTerm,
+                     model_matrix, typical)
     i = findfirst(t -> _trmequal(t, term), context.terms)
     i === nothing &&
         throw(ArgumentError("Can't determine columns corresponding to '$term' in matrix term $context"))
@@ -112,4 +116,24 @@ function typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typi
     all(v -> length(v) == 1, vals) ||
         throw(ArgumentError("Typical function should return a scalar."))
     return TypicalTerm(term, vals)
+end
+
+# keys should be symbols, but we don't place that resctriction
+# in case somebody has symbols as keys but a more general container type
+function typicalterm(term::AbstractTerm, context::MatrixTerm,
+                     model_matrix, typical::AbstractDict)
+    ts = _termsyms(term)
+    length(ts) == 1 ||
+        throw(ArgumentError("Using dictionary-based typical terms isn't " *
+                            "supported with terms corresponding to more than " *
+                            "variable: '$term' in matrix term $context could " *
+                            "not be mapped to a entry in $(typical)."))
+    return typicalterm(term, context, model_matrix, typical[only(ts)])
+end
+
+# necessary so that users don't need to specify a separate function
+# for the intercept when using the dict route
+function typicalterm(term::InterceptTerm, context::MatrixTerm,
+                     model_matrix, typical::AbstractDict)
+    return TypicalTerm(term, [1.0])
 end
