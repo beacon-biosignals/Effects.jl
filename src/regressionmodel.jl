@@ -1,6 +1,7 @@
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
-             eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
+             eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
+             vcov=StatsBase.vcov)
 
 Compute the `effects` as specified in `formula`.
 
@@ -59,7 +60,8 @@ Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
-                  eff_col=nothing, err_col=:err, typical=mean, invlink=identity)
+                  eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
+                  vcov=StatsBase.vcov)
     # right now this is written for a RegressionModel and implicitly assumes
     # the existence of an appropriate formula method
     form = formula(model)
@@ -112,7 +114,8 @@ end
 """
     effects(design::AbstractDict, model::RegressionModel;
             eff_col=nothing, err_col=:err, typical=mean,
-            lower_col=:lower, upper_col=:upper, invlink=identity)
+            lower_col=:lower, upper_col=:upper, invlink=identity,
+            vcov=StatsBase.vcov)
 
 Compute the `effects` as specified by the `design`.
 
@@ -124,11 +127,12 @@ the lower and upper edge of the error band (i.e. [resp-err, resp+err]).
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
-                 lower_col=:lower, upper_col=:upper, invlink=identity)
+                 lower_col=:lower, upper_col=:upper, invlink=identity,
+                 vcov=StatsBase.vcov)
     # TODO: add support for confidence intervals instead of std error
     grid = expand_grid(design)
     dv = something(eff_col, _responsename(model))
-    effects!(grid, model; eff_col=dv, err_col, typical, invlink)
+    effects!(grid, model; eff_col=dv, err_col, typical, invlink, vcov)
     # XXX DataFrames dependency
     grid[!, lower_col] = grid[!, dv] - grid[!, err_col]
     grid[!, upper_col] = grid[!, dv] + grid[!, err_col]

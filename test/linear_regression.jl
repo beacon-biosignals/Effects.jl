@@ -21,11 +21,15 @@ b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
     @test eff.y ≈ eff.x .* last(coef(model)) .+ first(coef(model))
     # test error
     pred = [1 first(eff.x)]
-    # if we drop support for Julia < 1.4, this first can become only
-    @test first(eff.err) ≈ first(sqrt(pred * vcov(model) * pred'))
+    @test first(eff.err) ≈ only(sqrt(pred * vcov(model) * pred'))
     # test CI
     @test eff.lower ≈ eff.y - eff.err
     @test eff.upper ≈ eff.y + eff.err
+
+    @testset "custom vcov" begin
+        eff2 = effects(design, model; vcov=x -> 2 * vcov(x))
+        @test first(eff2.err) ≈ only(sqrt(pred * 2vcov(model) * pred'))
+    end
 
     @testset "contrasts" begin
         # need to check this works when the response has also
