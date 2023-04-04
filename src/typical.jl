@@ -103,13 +103,7 @@ function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
            t1.forig == t2.forig
 end
 
-# XXX should probably drop the kwarg version of this
-# and skip the redirect, but that's Technically Breaking™
-# likewise add an AbstractMatrix type restriction to model_matrx
-function typicalterm(term::AbstractTerm, context::MatrixTerm,
-                     model_matrix; typical=mean)
-    return typicalterm(term, context, model_matrix, typical)
-end
+@deprecate typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean) typicalterm(term, context, model_matrix, typical)
 
 # the single function route
 function typicalterm(term::AbstractTerm, context::MatrixTerm,
