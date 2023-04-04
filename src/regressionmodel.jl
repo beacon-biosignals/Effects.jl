@@ -24,7 +24,7 @@ explicitly specified. For example:
 ```julia
 using DataStructures
 typical = DefaultDict(() -> mean)  # default to x -> mean(x)
-typical[:sex] = v -> 0.0                   # typical value for :sex
+typical[:sex] = v -> 0.0           # typical value for :sex
 ```
 
 By default, the column corresponding to the response variable in the formula
