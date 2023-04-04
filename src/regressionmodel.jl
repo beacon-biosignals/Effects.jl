@@ -13,6 +13,21 @@ is specified via `typical`. Note that this is also applied to categorical contra
 thus yielding an average of the contrast, weighted by the balance of levels in the data
 set used to fit the model.
 
+`typical` can either be a single, scalar-valued function (e.g. `mean`) or a dictionary
+matching term symbols to scalar-valued functions. The use of a dictionary
+allows specifying different `typical` functions for different input variables.
+In this case, `typical` functions must be provided for all term variables
+except the intercept. If there is a single term that should be "typified"
+differently than others, then the use of `DataStructures.DefaultDict` may
+be useful to create a default `typical` value with only the exception
+explicitly specified. For example:
+
+```julia
+using DataStructures
+typical = DefaultDict(() -> mean)  # default to x -> mean(x)
+typical[:sex] = v -> 0.0           # typical value for :sex
+```
+
 By default, the column corresponding to the response variable in the formula
 is overwritten with the effects, but an alternative column for the effects can
 be specified by `eff_col`. Note that `eff_col` is determined first by trying
@@ -38,6 +53,20 @@ Pointwise standard errors are written into the column specified by `err_col`.
     computed on the original, untransformed scale via the delta method using
     automatic differentiation. This means that the `invlink` function must be
     differentiable and should not involve inplace operations.
+
+Effects are computed using the model's variance-covariance matrix, which is
+computed by default using `StatsBas.vcov`. Alternative methods such as the
+sandwich estimator or robust estimators can be used by specifying `vcov`,
+which should be a function of a single argument (the model) returning
+the estimated variance-covariance matrix.
+[Vcov.jl](https://github.com/FixedEffects/Vcov.jl) and [CovarianceMatrices.jl](https://github.com/gragusa/CovarianceMatrices.jl)
+provide several possibilities as functions of multiple arguments and so it
+is necessary to curry when using these functions. For example
+```julia
+using Vcov
+myvcov(x) = Base.Fix2(vcov, Vcov.robust())
+```
+
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
