@@ -172,10 +172,10 @@ end
     refgrid = expand_grid(Dict(:x => [π], :w => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π log(π) sqrt(π)]
 
-    form = @formula(y ~ 0 + x + x^2 + x^3)
+    form = @formula(y ~ 0 + w + w^2 + w^3)
     f = apply_schema(form, schema(form, dat))
     rhs = f.rhs
     X = modelcols(rhs, dat)
-    refgrid = expand_grid(Dict(:x => [π]))
+    refgrid = expand_grid(Dict(:w => [π]))
     @test modelcols(typify(refgrid, f, X), refgrid) ≈ Float64[π π^2 π^3]
 end
