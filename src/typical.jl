@@ -90,16 +90,32 @@ function _replace(term::InteractionTerm, typicals::Dict)
 end
 
 _termsyms(t) = StatsModels.termsyms(t)
-_termsyms(t::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
+
+@static if hasfield(FunctionTerm, :args)
+    # StatsModels 0.7
+    function _termsyms(t::FunctionTerm)
+        return filter!(x -> x isa Symbol, foldl(union, StatsModels.termsyms.(t.args)))
+    end
+else
+    # StatsModels 0.6
+    _termsyms(::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
+end
 _symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
 
 _trmequal(t1::AbstractTerm, t2::AbstractTerm) = _symequal(t1, t2)
 _trmequal(t1::AbstractTerm, t2::FunctionTerm) = false
 _trmequal(t1::FunctionTerm, t2::AbstractTerm) = false
+@static if hasfield(FunctionTerm, :args)
+    # StatsModels 0.7
+    const _FUNCFIELDNAME = :f
+else
+    # StatsModels 0.6
+    const _FUNCFIELDNAME = :forig
+end
 function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
     return t1.exorig == t2.exorig &&
            _symequal(t1, t2) &&
-           t1.forig == t2.forig
+           getproperty(t1, _FUNCFIELDNAME) == getproperty(t2, _FUNCFIELDNAME)
 end
 
 @deprecate(typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean),
