@@ -104,8 +104,16 @@ _trmequal(t1::AbstractTerm, t2::AbstractTerm) = _symequal(t1, t2)
 _trmequal(t1::AbstractTerm, t2::FunctionTerm) = false
 _trmequal(t1::FunctionTerm, t2::AbstractTerm) = false
 function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
+    @static if hasfield(FunctionTerm, :args)
+        # StatsModels 0.7
+        fname = :f
+    else
+        # StatsModels 0.6
+        fname = :forig
+    end
     return t1.exorig == t2.exorig &&
-           _symequal(t1, t2)
+           _symequal(t1, t2) &&
+           getproperty(t1, fname) == getproperty(t2, fname)
 end
 
 @deprecate(typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean),
