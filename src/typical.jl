@@ -93,7 +93,7 @@ _termsyms(t) = StatsModels.termsyms(t)
 
 @static if hasfield(FunctionTerm, :args)
     # StatsModels 0.7
-    _termsyms(t::FunctionTerm) = StatsModels.termsyms.(t.args)
+    _termsyms(t::FunctionTerm) = foldl(union, StatsModels.termsyms.(t.args))
 else
     # StatsModels 0.6
     _termsyms(::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
