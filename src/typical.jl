@@ -93,7 +93,9 @@ _termsyms(t) = StatsModels.termsyms(t)
 
 @static if hasfield(FunctionTerm, :args)
     # StatsModels 0.7
-    _termsyms(t::FunctionTerm) = filter!(x -> x isa Symbol, foldl(union, StatsModels.termsyms.(t.args)))
+    function _termsyms(t::FunctionTerm)
+        return filter!(x -> x isa Symbol, foldl(union, StatsModels.termsyms.(t.args)))
+    end
 else
     # StatsModels 0.6
     _termsyms(::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
