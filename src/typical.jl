@@ -90,7 +90,14 @@ function _replace(term::InteractionTerm, typicals::Dict)
 end
 
 _termsyms(t) = StatsModels.termsyms(t)
-_termsyms(t::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
+
+@static if hasfield(FunctionTerm, :args)
+    # StatsModels 0.7
+    _termsyms(t::FunctionTerm) = StatsModels.termsyms.(only(t.args).args)
+else
+    # StatsModels 0.6
+    _termsyms(::FunctionTerm{Fo,Fa,Names}) where {Fo,Fa,Names} = Names
+end
 _symequal(t1::AbstractTerm, t2::AbstractTerm) = issetequal(_termsyms(t1), _termsyms(t2))
 
 _trmequal(t1::AbstractTerm, t2::AbstractTerm) = _symequal(t1, t2)
