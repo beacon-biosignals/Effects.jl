@@ -105,8 +105,7 @@ _trmequal(t1::AbstractTerm, t2::FunctionTerm) = false
 _trmequal(t1::FunctionTerm, t2::AbstractTerm) = false
 function _trmequal(t1::FunctionTerm, t2::FunctionTerm)
     return t1.exorig == t2.exorig &&
-           _symequal(t1, t2) &&
-           t1.forig == t2.forig
+           _symequal(t1, t2)
 end
 
 @deprecate(typicalterm(term::AbstractTerm, context::MatrixTerm, model_matrix; typical=mean),
