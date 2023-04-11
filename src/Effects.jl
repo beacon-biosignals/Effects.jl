@@ -18,6 +18,6 @@ include("regressionmodel.jl")
 export effects, effects!, expand_grid
 
 include("emmeans.jl")
-export emmeans, empairs, infinite_dof
+export emmeans, empairs
 
 end # module

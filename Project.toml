@@ -1,7 +1,7 @@
 name = "Effects"
 uuid = "8f03c58b-bd97-4933-a826-f71b64d2cca2"
 authors = ["Beacon Biosignals, Inc."]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
