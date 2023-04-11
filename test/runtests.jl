@@ -1,4 +1,10 @@
+using Aqua
+using Effects
 using Test
+
+@testset "Aqua" begin
+    Aqua.test_all(Effects; ambiguities=false)
+end
 
 @testset "TypicalTerm" begin
     include("typical.jl")
