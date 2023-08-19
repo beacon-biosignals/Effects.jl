@@ -8,9 +8,9 @@ using Test
 
 @testset "transformed response" begin
     dat = rdataset("car", "Prestige")
-    model = lm(@formula(log(Prestige) ~ 1 + Income * Education), dat)
     design = Dict(:Income => [1, 2],
                   :Education => [3, 4])
+    model = lm(@formula(log(Prestige) ~ 1 + Income * Education), dat)
     eff_original_scale = effects(design, model; invlink=exp)
     eff_logscale = effects(design, model)
     @test all(eff_logscale[!, 3] .≈ log.(eff_original_scale[!, 3]))
@@ -37,55 +37,62 @@ using Test
     @test isapprox(only(eff_emm_trans.err), 1.07; atol=0.005)
     @test isapprox(only(eff_emm_trans.lower), 45.3; atol=0.05)
     @test isapprox(only(eff_emm_trans.upper), 47.5; atol=0.05)
+
+    @testset "AutoInvLink doesn't work for models without a Link()" begin
+        # this goes through _link(::Any)
+        @test_throws ArgumentError effects(design, model; invlink=AutoInvLink())
+    end
 end
 
 @testset "link function" begin
     dat = rdataset("car", "Cowles")
     dat[!, :vol] = dat.Volunteer .== "yes"
     model = glm(@formula(vol ~ Extraversion * Neuroticism), dat, Bernoulli())
-    invlink = Base.Fix1(GLM.linkinv, Link(model.model))
     design = Dict(:Extraversion => [13],
-                  :Neuroticism => [16])
+                 :Neuroticism => [16])
     X = [1.0 13.0 16.0 13 * 16]
+    iv = Base.Fix1(GLM.linkinv, Link(model.model))
+    invlinks = [iv, AutoInvLink()]
+    @testset "invlink = $invlink" for invlink in invlinks
+        for level in [0.68, 0.95]
+            eff = effects(design, model; invlink, level)
 
-    for level in [0.68, 0.95]
-        eff = effects(design, model; invlink, level)
+            # compare with results from GLM.predict
+            pred = DataFrame(predict(model.model, X;
+                                    interval=:confidence,
+                                    interval_method=:delta,
+                                    level))
+            @test all(pred.prediction .≈ eff.vol)
+            @test all(isapprox.(pred.lower, eff.lower; atol=0.001))
+            @test all(isapprox.(pred.upper, eff.upper; atol=0.001))
 
-        # compare with results from GLM.predict
-        pred = DataFrame(predict(model.model, X;
-                                 interval=:confidence,
-                                 interval_method=:delta,
-                                 level))
-        @test all(pred.prediction .≈ eff.vol)
-        @test all(isapprox.(pred.lower, eff.lower; atol=0.001))
-        @test all(isapprox.(pred.upper, eff.upper; atol=0.001))
+            eff_trans = effects(design, model; level)
+            transform!(eff_trans,
+                    :vol => ByRow(iv),
+                    :lower => ByRow(iv),
+                    :upper => ByRow(iv); renamecols=false)
+            # for this model, things play out nicely
+            @test all(eff_trans.vol .≈ eff.vol)
+            @test all(isapprox.(eff_trans.lower, eff.lower; atol=0.001))
+            @test all(isapprox.(eff_trans.upper, eff.upper; atol=0.001))
+        end
 
-        eff_trans = effects(design, model; level)
-        transform!(eff_trans,
-                   :vol => ByRow(invlink),
-                   :lower => ByRow(invlink),
-                   :upper => ByRow(invlink); renamecols=false)
-        # for this model, things play out nicely
-        @test all(eff_trans.vol .≈ eff.vol)
-        @test all(isapprox.(eff_trans.lower, eff.lower; atol=0.001))
-        @test all(isapprox.(eff_trans.upper, eff.upper; atol=0.001))
+        # compare with results from emmeans in R
+        # emmeans(model, ~ neuroticism * extraversion, level=0.68)
+        eff_emm = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model)
+        @test isapprox(only(eff_emm.vol), -0.347; atol=0.005)
+        @test isapprox(only(eff_emm.err), 0.0549; atol=0.005)
+        @test isapprox(only(eff_emm.lower), -0.402; atol=0.005)
+        @test isapprox(only(eff_emm.upper), -0.292; atol=0.005)
+
+        # emmeans(model, ~ neuroticism * extraversion, level=0.68, transform="response")
+        eff_emm_trans = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model;
+                                invlink)
+        @test isapprox(only(eff_emm_trans.vol), 0.414; atol=0.005)
+        @test isapprox(only(eff_emm_trans.err), 0.0133; atol=0.005)
+        @test isapprox(only(eff_emm_trans.lower), 0.401; atol=0.005)
+        @test isapprox(only(eff_emm_trans.upper), 0.427; atol=0.005)
     end
-
-    # compare with results from emmeans in R
-    # emmeans(model, ~ neuroticism * extraversion, level=0.68)
-    eff_emm = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model)
-    @test isapprox(only(eff_emm.vol), -0.347; atol=0.005)
-    @test isapprox(only(eff_emm.err), 0.0549; atol=0.005)
-    @test isapprox(only(eff_emm.lower), -0.402; atol=0.005)
-    @test isapprox(only(eff_emm.upper), -0.292; atol=0.005)
-
-    # emmeans(model, ~ neuroticism * extraversion, level=0.68, transform="response")
-    eff_emm_trans = effects(Dict(:Extraversion => [12.4], :Neuroticism => [11.5]), model;
-                            invlink)
-    @test isapprox(only(eff_emm_trans.vol), 0.414; atol=0.005)
-    @test isapprox(only(eff_emm_trans.err), 0.0133; atol=0.005)
-    @test isapprox(only(eff_emm_trans.lower), 0.401; atol=0.005)
-    @test isapprox(only(eff_emm_trans.upper), 0.427; atol=0.005)
 end
 
 @testset "identity by another name" begin

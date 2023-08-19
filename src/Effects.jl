@@ -15,7 +15,7 @@ using ForwardDiff
 
 include("typical.jl")
 include("regressionmodel.jl")
-export effects, effects!, expand_grid
+export effects, effects!, expand_grid, AutoInvLink
 
 include("emmeans.jl")
 export emmeans, empairs

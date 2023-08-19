@@ -1,3 +1,25 @@
+# determine AutoInvLink automatically if a package with an appropriate extension
+# is loaded
+
+"""
+    AutoInvLink
+
+Singleton type indicating that the inverse link should be automatically
+determined from the model type.
+
+This will only work for model types with an appropriate extension on
+Julia 1.9+. If an appropriate extension is not defined, then an error
+will occur.
+
+Currently, this is only implemented for GLM.jl and MixedModels.jl
+"""
+struct AutoInvLink end
+
+# helper function to override in extensions
+function _link(::Any)
+    throw(ArgumentError("No appropriate extension is loaded for automatic " * 
+                        "determination of the inverse link for this model type"))
+end
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
              eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
@@ -54,6 +76,10 @@ Pointwise standard errors are written into the column specified by `err_col`.
     automatic differentiation. This means that the `invlink` function must be
     differentiable and should not involve inplace operations.
 
+The special singleton value `AutoInvLink()` can be used to specify that
+the appropriate inverse link should be determined and, where possible, a
+direct or analytic computation of the derivative is used. 
+
 Effects are computed using the model's variance-covariance matrix, which is
 computed by default using `StatsBas.vcov`. Alternative methods such as the
 sandwich estimator or robust estimators can be used by specifying `vcov`,
@@ -66,7 +92,6 @@ is necessary to curry when using these functions. For example
 using Vcov
 myvcov(x) = Base.Fix2(vcov, Vcov.robust())
 ```
-
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
@@ -87,6 +112,8 @@ The approach for computing effect is based on the effects plots described here:
 
 Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
+
+See also [`AutoInvLink`](@ref).
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
                   eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
@@ -99,8 +126,7 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
     if invlink !== identity
-        err .*= ForwardDiff.derivative.(invlink, eff)
-        eff .= invlink.(eff)
+        _difference_method!(eff, err, model, invlink)
     end
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
@@ -108,6 +134,24 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     # XXX remove DataFrames dependency
     # this doesn't work for a DataFrame and isn't mutating
     # return (; reference_grid..., depvar => eff, err_col => err)
+end
+
+# TODO: support the transformation method
+# in addition to the difference method
+# xref https://github.com/JuliaStats/GLM.jl/blob/c13577eaf3f418c58020534dd407532ee57f219b/src/glmfit.jl#L773-L783
+
+function _difference_method!(eff::Vector{T}, err::Vector{T}, 
+                            ::RegressionModel, 
+                             invlink) where {T <: AbstractFloat}
+
+    err .*= ForwardDiff.derivative.(invlink, eff)
+    eff .= invlink.(eff)
+    return eff, err
+end
+
+function ForwardDiff.derivative(::AutoInvLink, ::Real)
+    throw(ArgumentError("No appropriate extension is loaded for automatic " * 
+                        "determination of the inverse link for this model type"))
 end
 
 """
@@ -155,6 +199,8 @@ fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edges of the confidence interval.
 The default `level=nothing` corresponds to [resp-err, resp+err], while `level=0.95`
 corresponds to the 95% confidence interval.
+
+See also [`AutoInvLink`](@ref).
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
