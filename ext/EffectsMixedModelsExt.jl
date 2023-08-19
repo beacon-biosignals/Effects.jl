@@ -2,6 +2,7 @@ module EffectsMixedModelsExt
 
 using Effects
 using MixedModels
+using GLM: Link, mueta, linkinv
 
 function Effects._difference_method!(eff::Vector{T}, err::Vector{T}, 
                                      model::GeneralizedLinearMixedModel, 

@@ -2,6 +2,7 @@ using DataFrames
 using Effects
 using GLM
 using LinearAlgebra
+using MixedModels
 using RDatasets: dataset as rdataset
 using StableRNGs
 using Test
@@ -92,6 +93,19 @@ end
         @test isapprox(only(eff_emm_trans.lower), 0.401; atol=0.005)
         @test isapprox(only(eff_emm_trans.upper), 0.427; atol=0.005)
     end
+end
+
+@testset "link function in a MixedModel" begin
+    model = fit(MixedModel, 
+                @formula(use ~ 1 + age + (1|urban)), 
+                MixedModels.dataset(:contra), 
+                Bernoulli(); progress=false)
+    design = Dict(:age => -10:10)
+    eff_manual = effects(design, model; 
+                         invlink=Base.Fix1(GLM.linkinv, Link(model)))
+    eff_auto = effects(design, model; invlink=AutoInvLink())
+
+    @test all(isapprox.(Matrix(eff_manual), Matrix(eff_auto)))
 end
 
 @testset "identity by another name" begin
