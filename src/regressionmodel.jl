@@ -147,6 +147,9 @@ end
 function _difference_method!(::Vector{T}, ::Vector{T}, 
                              ::RegressionModel, 
                              ::AutoInvLink) where {T <: AbstractFloat}
+    @static if VERSION < v"1.9"
+        @error "AutoInvLink requires extensions and is thus not available on Julia < 1.9."
+    end
     throw(ArgumentError("No appropriate extension is loaded for automatic " * 
                         "determination of the inverse link for this model type"))
 end

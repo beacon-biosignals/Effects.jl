@@ -3,7 +3,7 @@ using Effects
 using Test
 
 @testset "Aqua" begin
-    Aqua.test_all(Effects; ambiguities=false)
+    Aqua.test_all(Effects; ambiguities=false, project_toml_formatting)
 end
 
 @testset "TypicalTerm" begin

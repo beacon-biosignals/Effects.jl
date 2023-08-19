@@ -40,6 +40,8 @@ using Test
     @test isapprox(only(eff_emm_trans.upper), 47.5; atol=0.05)
 
     @testset "AutoInvLink fails gracefully" begin
+        # this should work even pre Julia 1.9 because by definition 
+        # no extension is loaded
         @test_throws ArgumentError effects(design, model; invlink=AutoInvLink())
     end
 end
@@ -52,7 +54,11 @@ end
                  :Neuroticism => [16])
     X = [1.0 13.0 16.0 13 * 16]
     iv = Base.Fix1(GLM.linkinv, Link(model.model))
-    invlinks = [iv, AutoInvLink()]
+    @static if VERSION >= v"1.9"
+        invlinks = [iv, AutoInvLink()]
+    else
+        invlinks = [iv]
+    end
     @testset "invlink = $invlink" for invlink in invlinks
         for level in [0.68, 0.95]
             eff = effects(design, model; invlink, level)
@@ -95,17 +101,19 @@ end
     end
 end
 
-@testset "link function in a MixedModel" begin
-    model = fit(MixedModel, 
-                @formula(use ~ 1 + age + (1|urban)), 
-                MixedModels.dataset(:contra), 
-                Bernoulli(); progress=false)
-    design = Dict(:age => -10:10)
-    eff_manual = effects(design, model; 
-                         invlink=Base.Fix1(GLM.linkinv, Link(model)))
-    eff_auto = effects(design, model; invlink=AutoInvLink())
+@static if VERSION >= v"1.9"
+    @testset "link function in a MixedModel" begin
+        model = fit(MixedModel, 
+                    @formula(use ~ 1 + age + (1|urban)), 
+                    MixedModels.dataset(:contra), 
+                    Bernoulli(); progress=false)
+        design = Dict(:age => -10:10)
+        eff_manual = effects(design, model; 
+                            invlink=Base.Fix1(GLM.linkinv, Link(model)))
+        eff_auto = effects(design, model; invlink=AutoInvLink())
 
-    @test all(isapprox.(Matrix(eff_manual), Matrix(eff_auto)))
+        @test all(isapprox.(Matrix(eff_manual), Matrix(eff_auto)))
+    end
 end
 
 @testset "identity by another name" begin
