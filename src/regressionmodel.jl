@@ -135,22 +135,21 @@ end
 # in addition to the difference method
 # xref https://github.com/JuliaStats/GLM.jl/blob/c13577eaf3f418c58020534dd407532ee57f219b/src/glmfit.jl#L773-L783
 
-function _difference_method!(eff::Vector{T}, err::Vector{T}, 
-                            ::RegressionModel, 
-                             invlink) where {T <: AbstractFloat}
-
+function _difference_method!(eff::Vector{T}, err::Vector{T},
+                             ::RegressionModel,
+                             invlink) where {T<:AbstractFloat}
     err .*= ForwardDiff.derivative.(invlink, eff)
     eff .= invlink.(eff)
     return eff, err
 end
 
-function _difference_method!(::Vector{T}, ::Vector{T}, 
-                             ::RegressionModel, 
-                             ::AutoInvLink) where {T <: AbstractFloat}
+function _difference_method!(::Vector{T}, ::Vector{T},
+                             ::RegressionModel,
+                             ::AutoInvLink) where {T<:AbstractFloat}
     @static if VERSION < v"1.9"
         @error "AutoInvLink requires extensions and is thus not available on Julia < 1.9."
     end
-    throw(ArgumentError("No appropriate extension is loaded for automatic " * 
+    throw(ArgumentError("No appropriate extension is loaded for automatic " *
                         "determination of the inverse link for this model type"))
 end
 
