@@ -6,9 +6,6 @@ using GLM: AbstractGLM, Link, mueta, linkinv
 using StatsAPI: RegressionModel
 using StatsModels: TableRegressionModel
 
-# we keep RegressionModel so that this will also be used 
-# for MixedModels.jl
-
 _link(m::TableRegressionModel{<:AbstractGLM}) = Link(m.model)
 _link(m::AbstractGLM) = Link(m)
 
