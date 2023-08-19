@@ -15,11 +15,6 @@ Currently, this is only implemented for GLM.jl and MixedModels.jl
 """
 struct AutoInvLink end
 
-# helper function to override in extensions
-function _link(::Any)
-    throw(ArgumentError("No appropriate extension is loaded for automatic " * 
-                        "determination of the inverse link for this model type"))
-end
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
              eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
@@ -149,7 +144,9 @@ function _difference_method!(eff::Vector{T}, err::Vector{T},
     return eff, err
 end
 
-function ForwardDiff.derivative(::AutoInvLink, ::Real)
+function _difference_method!(::Vector{T}, ::Vector{T}, 
+                             ::RegressionModel, 
+                             ::AutoInvLink) where {T <: AbstractFloat}
     throw(ArgumentError("No appropriate extension is loaded for automatic " * 
                         "determination of the inverse link for this model type"))
 end

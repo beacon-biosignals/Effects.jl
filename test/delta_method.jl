@@ -38,8 +38,7 @@ using Test
     @test isapprox(only(eff_emm_trans.lower), 45.3; atol=0.05)
     @test isapprox(only(eff_emm_trans.upper), 47.5; atol=0.05)
 
-    @testset "AutoInvLink doesn't work for models without a Link()" begin
-        # this goes through _link(::Any)
+    @testset "AutoInvLink fails gracefully" begin
         @test_throws ArgumentError effects(design, model; invlink=AutoInvLink())
     end
 end

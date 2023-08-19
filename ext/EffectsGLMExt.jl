@@ -9,12 +9,13 @@ using StatsModels: TableRegressionModel
 # we keep RegressionModel so that this will also be used 
 # for MixedModels.jl
 
-Effects._link(m::TableRegressionModel{<:AbstractGLM}) = Link(m.model)
+_link(m::TableRegressionModel{<:AbstractGLM}) = Link(m.model)
+_link(m::AbstractGLM) = Link(m)
 
 function Effects._difference_method!(eff::Vector{T}, err::Vector{T}, 
-                                     model::RegressionModel, 
+                                     model::Union{TableRegressionModel{<:AbstractGLM}, AbstractGLM}, 
                                      ::AutoInvLink) where {T <: AbstractFloat}
-    link = Effects._link(model)
+    link = _link(model)
     err .*= mueta.(link, eff)
     eff .= linkinv.(link, eff)
 
