@@ -6,8 +6,8 @@ using GLM: AbstractGLM, Link, mueta, linkinv
 using StatsAPI: RegressionModel
 using StatsModels: TableRegressionModel
 
+# TODO: upstream a Link(::TableRegressionModel{<:AbstractGLM})
 _link(m::TableRegressionModel{<:AbstractGLM}) = Link(m.model)
-_link(m::AbstractGLM) = Link(m)
 
 function Effects._difference_method!(eff::Vector{T}, err::Vector{T},
                                      model::Union{TableRegressionModel{<:AbstractGLM},
