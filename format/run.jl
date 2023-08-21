@@ -3,7 +3,7 @@ using JuliaFormatter
 function main()
     perfect = true
     # note: keep in sync with `.github/workflows/format-check.yml`
-    for d in ["src/", "test/", "docs/"]
+    for d in ["src/", "ext/", "test/", "docs/"]
         @info "...linting $d ..."
         dir_perfect = format(d, YASStyle())
         perfect = perfect && dir_perfect

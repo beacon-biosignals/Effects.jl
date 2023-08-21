@@ -3,7 +3,9 @@ using Effects
 using Test
 
 @testset "Aqua" begin
-    Aqua.test_all(Effects; ambiguities=false)
+    # layout of weakdeps and extensions etc. differs between pre 1.9 and 1.9+
+    project_toml_formatting = VERSION >= v"1.9"
+    Aqua.test_all(Effects; ambiguities=false, project_toml_formatting)
 end
 
 @testset "TypicalTerm" begin

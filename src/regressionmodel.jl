@@ -1,3 +1,25 @@
+# determine AutoInvLink automatically if a package with an appropriate extension
+# is loaded
+
+"""
+    AutoInvLink
+
+Singleton type indicating that the inverse link should be automatically
+determined from the model type.
+
+!!! compat "Julia 1.9"
+    Automatic inverse link determination is implemented using package
+    extensions, which are available beginning in Julia 1.9.
+    
+An error is thrown if the inverse link cannot be determined. This will
+always occur with Julia versions prior to 1.9, and will otherwise occur
+when no extension has been loaded that specifies the link function for
+the model type.
+
+Currently, this is only implemented for GLM.jl and MixedModels.jl
+"""
+struct AutoInvLink end
+
 """
     effects!(reference_grid::DataFrame, model::RegressionModel;
              eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
@@ -54,6 +76,11 @@ Pointwise standard errors are written into the column specified by `err_col`.
     automatic differentiation. This means that the `invlink` function must be
     differentiable and should not involve inplace operations.
 
+On Julia versions 1.9 or later, the special singleton value `AutoInvLink()`
+can be used to specify that the appropriate inverse link should be determined
+automatically. In that case, a direct or analytic computation of the derivative
+is used when possible.
+
 Effects are computed using the model's variance-covariance matrix, which is
 computed by default using `StatsBas.vcov`. Alternative methods such as the
 sandwich estimator or robust estimators can be used by specifying `vcov`,
@@ -66,7 +93,6 @@ is necessary to curry when using these functions. For example
 using Vcov
 myvcov(x) = Base.Fix2(vcov, Vcov.robust())
 ```
-
 
 The reference grid must contain columns for all predictors in the formula.
 (Interactions are computed automatically.) Contrasts must match the contrasts
@@ -87,6 +113,8 @@ The approach for computing effect is based on the effects plots described here:
 
 Fox, John (2003). Effect Displays in R for Generalised Linear Models.
 Journal of Statistical Software. Vol. 8, No. 15
+
+See also [`AutoInvLink`](@ref).
 """
 function effects!(reference_grid::DataFrame, model::RegressionModel;
                   eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
@@ -98,16 +126,44 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     X = modelcols(form_typical, reference_grid)
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
-    if invlink !== identity
-        err .*= ForwardDiff.derivative.(invlink, eff)
-        eff .= invlink.(eff)
-    end
+    _difference_method!(eff, err, model, invlink)
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
     return reference_grid
     # XXX remove DataFrames dependency
     # this doesn't work for a DataFrame and isn't mutating
     # return (; reference_grid..., depvar => eff, err_col => err)
+end
+
+# TODO: support the transformation method
+# in addition to the difference method
+# xref https://github.com/JuliaStats/GLM.jl/blob/c13577eaf3f418c58020534dd407532ee57f219b/src/glmfit.jl#L773-L783
+
+_invlink_and_deriv(invlink, η) = (invlink(η), ForwardDiff.derivative(invlink, η))
+_invlink_and_deriv(::typeof(identity), η) = (η, 1)
+# this isn't the best name because it sometimes returns the inverse link and sometimes the link (Link())
+# for now, this is private API, but we should see how this goes and whether we can make it public API
+# so local extensions (instead of Package-Extensions) are better supported 
+_model_link(::RegressionModel, invlink::Function) = invlink
+function _model_link(model::RegressionModel, ::AutoInvLink)
+    msg = string("cannot automatically determine inverse link for models ",
+                 "of type ", typeof(model))
+    @static if isdefined(Base, :get_extension)
+        msg *= "; no appropriate extension has been loaded"
+    end
+    throw(ArgumentError(msg))
+end
+
+function _difference_method!(eff::Vector{T}, err::Vector{T},
+                             m::RegressionModel,
+                             invlink) where {T<:AbstractFloat}
+    link = _model_link(m, invlink)
+    @inbounds for i in eachindex(eff, err)
+        μ, dμdη = _invlink_and_deriv(link, eff[i])
+        err[i] *= dμdη
+        eff[i] = μ
+    end
+    return eff, err
 end
 
 """
@@ -155,6 +211,8 @@ fully-crossed design. Additionally, two extra columns are created representing
 the lower and upper edges of the confidence interval.
 The default `level=nothing` corresponds to [resp-err, resp+err], while `level=0.95`
 corresponds to the 95% confidence interval.
+
+See also [`AutoInvLink`](@ref).
 """
 function effects(design::AbstractDict, model::RegressionModel;
                  eff_col=nothing, err_col=:err, typical=mean,
