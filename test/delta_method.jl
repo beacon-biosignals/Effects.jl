@@ -40,7 +40,7 @@ using Test
     @test isapprox(only(eff_emm_trans.upper), 47.5; atol=0.05)
 
     @testset "AutoInvLink fails gracefully" begin
-        # this should work even pre Julia 1.9 because by definition 
+        # this should work even pre Julia 1.9 because by definition
         # no extension is loaded
         @test_throws ArgumentError effects(design, model; invlink=AutoInvLink())
     end
@@ -105,6 +105,20 @@ end
 end
 
 @static if VERSION >= v"1.9"
+    @testset "Non Link01 GLM link" begin
+        dat = rdataset("car", "Cowles")
+        dat[!, :vol] = dat.Volunteer .== "yes"
+        # this isn't a particularly sensible model, but it's fine for testing
+        model = glm(@formula(vol ~ Extraversion * Neuroticism), dat, Poisson())
+        design = Dict(:Extraversion => [13],
+                      :Neuroticism => [16])
+        X = [1.0 13.0 16.0 13 * 16]
+        eff_manual = effects(design, model;
+                             invlink=Base.Fix1(GLM.linkinv, Link(model.model)))
+        eff_auto = effects(design, model; invlink=AutoInvLink())
+
+        @test all(isapprox.(Matrix(eff_manual), Matrix(eff_auto)))
+    end
     @testset "link function in a MixedModel" begin
         model = fit(MixedModel,
                     @formula(use ~ 1 + age + (1 | urban)),
