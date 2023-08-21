@@ -7,9 +7,14 @@
 Singleton type indicating that the inverse link should be automatically
 determined from the model type.
 
-This will only work for model types with an appropriate extension on
-Julia 1.9+. If an appropriate extension is not defined, then an error
-will occur.
+!!! compat "Julia 1.9"
+    Automatic inverse link determination is implemented using package
+    extensions, which are available beginning in Julia 1.9.
+    
+An error is thrown if the inverse link cannot be determined. This will
+always occur with Julia versions prior to 1.9, and will otherwise occur
+when no extension has been loaded that specifies the link function for
+the model type.
 
 Currently, this is only implemented for GLM.jl and MixedModels.jl
 """
@@ -71,9 +76,10 @@ Pointwise standard errors are written into the column specified by `err_col`.
     automatic differentiation. This means that the `invlink` function must be
     differentiable and should not involve inplace operations.
 
-The special singleton value `AutoInvLink()` can be used to specify that
-the appropriate inverse link should be determined and, where possible, a
-direct or analytic computation of the derivative is used. 
+On Julia versions 1.9 or later, the special singleton value `AutoInvLink()`
+can be used to specify that the appropriate inverse link should be determined
+automatically. In that case, a direct or analytic computation of the derivative
+is used when possible.
 
 Effects are computed using the model's variance-covariance matrix, which is
 computed by default using `StatsBas.vcov`. Alternative methods such as the

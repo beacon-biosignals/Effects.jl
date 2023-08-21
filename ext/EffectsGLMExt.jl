@@ -3,7 +3,7 @@ module EffectsGLMExt
 using Effects
 
 using GLM: AbstractGLM, Link, Link01, inverselink
-using StatsModels: TableRegressionModel
+using Effects.StatsModels: TableRegressionModel
 
 # TODO: upstream a Link(::TableRegressionModel{<:AbstractGLM})
 Effects._model_link(m::TableRegressionModel{<:AbstractGLM}, ::AutoInvLink) = Link(m.model)
