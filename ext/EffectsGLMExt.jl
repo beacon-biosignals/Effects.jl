@@ -2,22 +2,13 @@ module EffectsGLMExt
 
 using Effects
 
-using GLM: AbstractGLM, Link, mueta, linkinv
-using StatsAPI: RegressionModel
+using GLM: AbstractGLM, Link, Link01, inverselink
 using StatsModels: TableRegressionModel
 
 # TODO: upstream a Link(::TableRegressionModel{<:AbstractGLM})
-_link(m::TableRegressionModel{<:AbstractGLM}) = Link(m.model)
-
-function Effects._difference_method!(eff::Vector{T}, err::Vector{T},
-                                     model::Union{TableRegressionModel{<:AbstractGLM},
-                                                  AbstractGLM},
-                                     ::AutoInvLink) where {T<:AbstractFloat}
-    link = _link(model)
-    err .*= mueta.(link, eff)
-    eff .= linkinv.(link, eff)
-
-    return err
-end
+Effects._model_link(m::TableRegressionModel{<:AbstractGLM}, ::AutoInvLink) = Link(m.model)
+Effects._model_link(m::AbstractGLM, ::AutoInvLink) = Link(m)
+Effects._invlink_and_deriv(link::Link01, η) = inverselink(link, η)[1:2:3]  # (µ, 1 - µ, dμdη)
+Effects._invlink_and_deriv(link::Link, η) = inverselink(link, η)[1:2]  # (µ, dμdη, NaN)
 
 end # module

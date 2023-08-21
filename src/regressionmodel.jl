@@ -120,9 +120,7 @@ function effects!(reference_grid::DataFrame, model::RegressionModel;
     X = modelcols(form_typical, reference_grid)
     eff = X * coef(model)
     err = sqrt.(diag(X * vcov(model) * X'))
-    if invlink !== identity
-        _difference_method!(eff, err, model, invlink)
-    end
+    _difference_method!(eff, err, model, invlink)
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
     return reference_grid
@@ -135,22 +133,30 @@ end
 # in addition to the difference method
 # xref https://github.com/JuliaStats/GLM.jl/blob/c13577eaf3f418c58020534dd407532ee57f219b/src/glmfit.jl#L773-L783
 
-function _difference_method!(eff::Vector{T}, err::Vector{T},
-                             ::RegressionModel,
-                             invlink) where {T<:AbstractFloat}
-    err .*= ForwardDiff.derivative.(invlink, eff)
-    eff .= invlink.(eff)
-    return eff, err
-end
-
-function _difference_method!(::Vector{T}, ::Vector{T},
-                             ::RegressionModel,
-                             ::AutoInvLink) where {T<:AbstractFloat}
+_invlink_and_deriv(invlink, η) = (invlink(η), ForwardDiff.derivative(invlink, η))
+_invlink_and_deriv(::typeof(identity), η) = (η, 1)
+# this isn't the best name because it sometimes returns the inverse link and sometimes the link (Link())
+# for now, this is private API, but we should see how this goes and whether we can make it public API
+# so local extensions (instead of Package-Extensions) are better supported 
+_model_link(::RegressionModel, invlink::Function) = invlink
+function _model_link(::RegressionModel, ::AutoInvLink) 
     @static if VERSION < v"1.9"
         @error "AutoInvLink requires extensions and is thus not available on Julia < 1.9."
     end
     throw(ArgumentError("No appropriate extension is loaded for automatic " *
                         "determination of the inverse link for this model type"))
+end
+
+function _difference_method!(eff::Vector{T}, err::Vector{T},
+                             m::RegressionModel,
+                             invlink) where {T<:AbstractFloat}
+    link = _model_link(m, invlink)
+    @inbounds for i in eachindex(eff, err)
+        μ, dμdη = _invlink_and_deriv(link, eff[i])
+        err[i] *= dμdη
+        eff[i] = μ
+    end
+    return eff, err
 end
 
 """

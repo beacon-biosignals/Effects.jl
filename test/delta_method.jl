@@ -56,6 +56,7 @@ end
     iv = Base.Fix1(GLM.linkinv, Link(model.model))
     @static if VERSION >= v"1.9"
         invlinks = [iv, AutoInvLink()]
+        @test Effects._model_link(model, AutoInvLink()) == Effects._model_link(model.model, AutoInvLink())
     else
         invlinks = [iv]
     end
