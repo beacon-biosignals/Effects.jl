@@ -139,7 +139,7 @@ _invlink_and_deriv(::typeof(identity), η) = (η, 1)
 # for now, this is private API, but we should see how this goes and whether we can make it public API
 # so local extensions (instead of Package-Extensions) are better supported 
 _model_link(::RegressionModel, invlink::Function) = invlink
-function _model_link(::RegressionModel, ::AutoInvLink) 
+function _model_link(::RegressionModel, ::AutoInvLink)
     @static if VERSION < v"1.9"
         @error "AutoInvLink requires extensions and is thus not available on Julia < 1.9."
     end
