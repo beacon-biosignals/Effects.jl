@@ -43,7 +43,7 @@ This is in some sense unsurprising: the different coding schemes correspond to d
 In spite of these differences, these models make the same predictions about the data:
 
 ```@example contrasts
-response(mod_treat) ≈ response(mod_eff)
+fitted(mod_treat) ≈ fitted(mod_eff)
 ```
 
 At a deep level, these models are the actually same model, but with different parameterizations. In order to get a better view about what a model is saying about the data, abstracted away from the parameterization, we can see what the model looks like in data space. For that, we can use Effects.jl to generate the *effects* that the model is capturing. We do this by specifying a (subset of the) design and creating a reference grid, then computing the model's prediction and associated error at those values.
