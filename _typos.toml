@@ -4,10 +4,15 @@
 [default.extend-identifiers]
 Lik = "Lik"
 missings = "missings"
+# misspelled in the car::Cowles dataset
+Extraversion = "Extraversion"
+extraversion = "extraversion"
+Fo = "Fo"
 
 [default.extend-words]
 Lik = "Lik"
 missings = "missings"
+
 
 [type.package_toml]
 # Don't check spellings in these files

@@ -1,7 +1,7 @@
 #=
 
 Idea is: we have a model formula and a design dict of variables with reference values.
-all teh terms that are not present in the design get "typified".  we re-write the model
+all the terms that are not present in the design get "typified".  we re-write the model
 formula replacing all the terms with their "typified" version where available.
 
 then we call modelcols using this new formula + the reference grid
