@@ -1,0 +1,25 @@
+# https://github.com/crate-ci/typos#false-positives
+[default]
+
+[default.extend-identifiers]
+Lik = "Lik"
+missings = "missings"
+# misspelled in the car::Cowles dataset
+Extraversion = "Extraversion"
+extraversion = "extraversion"
+Fo = "Fo"
+
+[default.extend-words]
+Lik = "Lik"
+missings = "missings"
+
+
+[type.package_toml]
+# Don't check spellings in these files
+extend-glob = ["Manifest.toml", "Project.toml"]
+check-file = false
+
+[type.bib]
+# contain lots of names, which are a great spot for false positives
+extend-glob = ["*.bib"]
+check-file = false
