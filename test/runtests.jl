@@ -6,10 +6,18 @@ using Test
     Aqua.test_all(Effects; ambiguities=false)
 end
 
-@testset "TypicalTerm" include("typical.jl")
+@testset "TypicalTerm" begin
+    include("typical.jl")
+end
 
-@testset "linear regression" include("linear_regression.jl")
+@testset "linear regression" begin
+    include("linear_regression.jl")
+end
 
-@testset "delta method" include("delta_method.jl")
+    @testset "delta method" begin
+        include("delta_method.jl")
+end
 
-@testset "emmeans" include("emmeans.jl")
+@testset "emmeans" begin
+    include("emmeans.jl")
+end
