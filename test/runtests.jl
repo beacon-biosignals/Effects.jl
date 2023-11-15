@@ -14,8 +14,8 @@ end
     include("linear_regression.jl")
 end
 
-    @testset "delta method" begin
-        include("delta_method.jl")
+@testset "delta method" begin
+    include("delta_method.jl")
 end
 
 @testset "emmeans" begin
