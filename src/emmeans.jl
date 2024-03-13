@@ -140,7 +140,7 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
     pairs = combinations(eachrow(df), 2)
     # TODO make this more efficient in allocations
     result_df = mapreduce(vcat, pairs) do (df1, df2)
-        result = Dict{String,Union{String,Number}}()
+        result = Dict{String,Union{AbstractString,Number}}()
 
         for col in names(df1, Not(stats_cols))
             result[col] = if df1[col] == df2[col]
