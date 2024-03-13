@@ -1,6 +1,7 @@
 using DataFrames
 using Effects
 using GLM
+using InlineStrings
 using MultipleTesting
 using StableRNGs
 using StandardizedPredictors
@@ -11,7 +12,7 @@ using Test
 rng = StableRNG(42)
 growthdata = DataFrame(;
                        age=[13:20; 13:20],
-                       sex=repeat(["male", "female"]; inner=8),
+                       sex=String7.(repeat(["male", "female"]; inner=8)),
                        weight=[range(100, 155; length=8); range(100, 125; length=8)] .+
                               randn(rng, 16))
 # now make unbalanced
@@ -19,6 +20,7 @@ growthdata[(end - 2):end, :sex] .= "other"
 model = lm(@formula(weight ~ 1 + sex * age), growthdata)
 model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
                   contrasts=Dict(:age => ZScore(), :sex => EffectsCoding()))
+
 # values from R
 # done using default contrasts and without scaling
 # which is a good test that these things are contrast invariant
@@ -97,5 +99,15 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
         emp_adj = empairs(m; dof=dof_residual, padjust=bonferroni)
         @test all(isapprox.(emp_adj[!, "Pr(>|t|)"], [6.691955e-09, 1.0, 1.009702e-04];
                             rtol=0.001))
+    end
+
+    @testset "AbstractString crossing" begin
+        # this model is utter nonsense, but it creates a particular pattern
+        # with InlineStrings that fails if our type restriction is too tight
+        growthdata2 = transform(growthdata, :sex => reverse => :sex2)
+        nonsense_model = lm(@formula(weight ~ 1 + sex * sex2), growthdata2)
+        emp = empairs(m)
+        # 3! x 3! combinations
+        @test nrow(emp) == 36
     end
 end
