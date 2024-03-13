@@ -106,7 +106,7 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
         # with InlineStrings that fails if our type restriction is too tight
         growthdata2 = transform(growthdata, :sex => reverse => :sex2)
         nonsense_model = lm(@formula(weight ~ 1 + sex * sex2), growthdata2)
-        emp = empairs(m)
+        emp = empairs(nonsense_model)
         # 3! x 3! combinations
         @test nrow(emp) == 36
     end
