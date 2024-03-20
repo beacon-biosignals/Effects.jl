@@ -24,7 +24,9 @@ using TestSetExtensions
         include("emmeans.jl")
     end
 
-    @testset "MixedModels.jl" begin
-        include("mixedmodels.jl")
+    @static if VERSION >= v"1.9"
+        @testset "MixedModels.jl" begin
+            include("mixedmodels.jl")
+        end
     end
 end
