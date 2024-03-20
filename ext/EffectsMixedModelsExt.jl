@@ -19,7 +19,7 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel;
     # the existence of an appropriate formula method
     form = formula(model)
     form_typical = typify(reference_grid, form, modelmatrix(model); typical=typical)
-    piv = view(model.feterm.piv, 1:model.feterm.rank)
+    piv = view(model.feterm.piv, 1:(model.feterm.rank))
     X = view(modelcols(form_typical, reference_grid), :, piv)
     eff = X * fixef(model)
     err = sqrt.(diag(X * vcov(model)[piv, piv] * X'))

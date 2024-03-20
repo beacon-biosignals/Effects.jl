@@ -7,8 +7,8 @@ using Test
 
 rng = StableRNG(42)
 x = rand(rng, 100)
-data = (x = x, x2 = 1.5 .* x, y = rand(rng, [0,1], 100), z = repeat('A':'T', 5))
-model = @suppress fit(MixedModel, @formula(y ~ x + x2 + (1|z)), data; progress=false)
+data = (x=x, x2=1.5 .* x, y=rand(rng, [0, 1], 100), z=repeat('A':'T', 5))
+model = @suppress fit(MixedModel, @formula(y ~ x + x2 + (1 | z)), data; progress=false)
 dropped_idx = model.feterm.piv[end]
 dropped_coef = coefnames(model)[dropped_idx]
 kept_coef = last(fixefnames(model))
