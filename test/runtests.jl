@@ -23,4 +23,8 @@ using TestSetExtensions
     @testset "emmeans" begin
         include("emmeans.jl")
     end
+
+    @testset "MixedModels.jl" begin
+        include("mixedmodels.jl")
+    end
 end
