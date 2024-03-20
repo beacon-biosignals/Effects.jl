@@ -24,5 +24,12 @@ eff = effects(design, model)
 @test eff.y - eff.err ≈ eff.lower
 @test eff.y + eff.err ≈ eff.upper
 
+# there is one bit of weirdness -- the removed coefficients behave like any other
+# variable in the "design" that is missing from the model.
 design = Dict(Symbol(dropped_coef) => [0])
-eff = effects(design, model)
+eff_dropped = effects(design, model)
+
+design = Dict(:q => [0])
+eff_not_present = effects(design, model)
+
+@test Matrix(eff_dropped) ≈ Matrix(eff_not_present)
