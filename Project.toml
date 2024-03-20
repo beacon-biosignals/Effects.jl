@@ -1,7 +1,7 @@
 name = "Effects"
 uuid = "8f03c58b-bd97-4933-a826-f71b64d2cca2"
 authors = ["Beacon Biosignals, Inc."]
-version = "1.1.2"
+version = "1.2.0"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
@@ -42,6 +42,7 @@ Statistics = "1.6"
 StatsAPI = "1.6"
 StatsBase = "0.33, 0.34"
 StatsModels = "0.6.23, 0.7"
+Suppressor = "0.2"
 Tables = "1"
 Test = "1"
 TestSetExtensions = "3"
@@ -62,9 +63,10 @@ StandardizedPredictors = "5064a6a7-f8c2-40e2-8bdc-797ec6f1ae18"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestSetExtensions = "98d24dd4-01ad-11ea-1b02-c9a08f80db04"
 Vcov = "ec2bfdc2-55df-4fc9-b9ae-4958c2cf2486"
 
 [targets]
-test = ["Aqua", "DataFrames", "DataStructures", "GLM", "InlineStrings", "MixedModels", "MultipleTesting", "RDatasets", "StableRNGs", "StatsBase", "StatsModels", "StandardizedPredictors", "Test", "TestSetExtensions", "Vcov"]
+test = ["Aqua", "DataFrames", "DataStructures", "GLM", "InlineStrings", "MixedModels", "MultipleTesting", "RDatasets", "StableRNGs", "StatsBase", "StatsModels", "StandardizedPredictors", "Suppressor", "Test", "TestSetExtensions", "Vcov"]
