@@ -12,7 +12,7 @@ using GLM: Link
 
 Effects._model_link(m::GeneralizedLinearMixedModel, ::AutoInvLink) = Link(m)
 
-function Effects.effects!(reference_grid::DataFrame, model::RegressionModel;
+function Effects.effects!(reference_grid::DataFrame, model::MixedModel;
                           eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
                           vcov=StatsBase.vcov)
     # right now this is written for a RegressionModel and implicitly assumes
