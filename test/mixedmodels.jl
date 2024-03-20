@@ -1,11 +1,11 @@
 using DataFrames
 using Effects
 using MixedModels
-using Random
+using StableRNGs
 using Suppressor
 using Test
 
-rng = MersenneTwister(0)
+rng = StableRNG(42)
 x = rand(rng, 100)
 data = (x = x, x2 = 1.5 .* x, y = rand(rng, [0,1], 100), z = repeat('A':'T', 5))
 model = @suppress fit(MixedModel, @formula(y ~ x + x2 + (1|z)), data; progress=false)
