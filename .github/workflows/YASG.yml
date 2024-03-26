@@ -16,22 +16,26 @@ on:
       - 'format/**'
 jobs:
   format-check:
-    name: YASG Enforcement (Julia ${{ matrix.julia-version }} - ${{ github.event_name }})
+    name: YASG Enforcement (Julia ${{ matrix.julia-version }})
     # Run on push's or non-draft PRs
     if: (github.event_name == 'push') || (github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        julia-version: [1.6]
+        julia-version: [1.9]
     steps:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.julia-version }}
       - uses: actions/checkout@v4
+      - name: Cache
+        uses: julia-actions/cache@v1
+        with:
+            cache-compiled: "true"
       - name: Instantiate `format` environment and format
         run: |
-          julia --project=format -e 'using Pkg; Pkg.instantiate()'
-          julia --project=format 'format/run.jl'
+          julia --project=format -O0 -e 'using Pkg; Pkg.instantiate()'
+          julia --project=format -O0 'format/run.jl'
       - uses: reviewdog/action-suggester@v1
         if: github.event_name == 'pull_request'
         with:
