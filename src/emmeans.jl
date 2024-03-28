@@ -86,7 +86,6 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
         scale = quantile.(TDist.(result[!, :dof]), (1 + ci_level) / 2)
         result[!, lower_col] .= result[!, eff_col] .- result[!, err_col] .* scale
         result[!, upper_col] .= result[!, eff_col] .+ result[!, err_col] .* scale
-
     end
     return result
 end
@@ -145,7 +144,7 @@ function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
 end
 
 function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
-                ci_level=nothing, lower_col=:lower, upper_col=:upper)
+                 ci_level=nothing, lower_col=:lower, upper_col=:upper)
     # need to enforce that we're all the same type
     # (mixing string and symbol is an issue with Not
     #  and a few other things below)

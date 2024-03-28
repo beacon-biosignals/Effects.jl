@@ -58,14 +58,14 @@ model_scaled = lm(@formula(weight ~ 1 + sex * age), growthdata;
         em = emmeans(m; ci_level=0.68)
         @test all(==(Inf), em[!, :dof])
         # 68% CI is approximately one standard error
-        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol=1e-3
-        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol=1e-3
+        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol = 1e-3
+        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol = 1e-3
 
         em = emmeans(m; ci_level=0.68, dof=dof_residual)
         @test all(==(10), em[!, :dof])
         # 68% CI is approximately one standard error
-        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol=1e-3
-        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol=1e-3
+        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol = 1e-3
+        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol = 1e-3
     end
 end
 
@@ -119,14 +119,14 @@ bonferroni(pvals) = adjust(PValues(pvals), Bonferroni())
         em = empairs(m; ci_level=0.68)
         @test all(==(Inf), em[!, :dof])
         # 68% CI is approximately one standard error
-        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol=1e-3
-        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol=1e-3
+        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol = 1e-3
+        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol = 1e-3
 
         em = emmeans(m; ci_level=0.68, dof=dof_residual)
         @test all(==(10), em[!, :dof])
         # 68% CI is approximately one standard error
-        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol=1e-3
-        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol=1e-3
+        @test em[!, :weight] + em[!, :err] ≈ em[!, :upper] rtol = 1e-3
+        @test em[!, :weight] - em[!, :err] ≈ em[!, :lower] rtol = 1e-3
     end
 
     @testset "AbstractString crossing" begin
