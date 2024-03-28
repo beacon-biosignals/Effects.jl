@@ -20,7 +20,8 @@ pooled_sem(sems...) = sqrt(sum(abs2, sems))
 # then choose a less full service function
 """
     emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
-            invlink=identity, levels=Dict(), dof=nothing)
+            invlink=identity, levels=Dict(), dof=nothing,
+            ci_level=nothing, lower_col=:lower, upper_col=:upper)
 
 Compute estimated marginal means, a.k.a. least-square (LS) means for a model.
 
@@ -38,6 +39,13 @@ or vector of appropriate length. For example, in a mixed effect model with
 a large number of observations, `dof=Inf` may be appropriate.
 
 `invlink`, `eff_col` and `err_col` work exactly as in [`effects!`](@ref).
+
+If `ci_level` is provided, then `ci_level` confidence intervals are computed using
+the Wald approximation based on the standard errors and quantiles of the ``t``-distribution.
+If `dof` is not provided, then the degrees of freedom are assumed to be infinite,
+which is equivalent to using the normal distribution.
+The corresponding lower and upper edges of the interval are placed in `lower_col`
+and `upper_col`, respectively.
 
 Estimated marginal means are closely related to effects and are also known as
 least-square means. The functionality here is a convenience
@@ -92,8 +100,10 @@ end
 
 """
     empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
-            invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
-    empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
+            invlink=identity, levels=Dict(), dof=nothing, padjust=identity,
+            ci_level=nothing, lower_col=:lower, upper_col=:upper)
+    empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
+            ci_level=nothing, lower_col=:lower, upper_col=:upper)
 
 Compute pairwise differences of estimated marginal means.
 
@@ -118,8 +128,18 @@ If `padjust` is provided, then it is used to compute adjust the p-values for
 multiple comparisons. [`MultipleTesting.jl`](https://juliangehring.github.io/MultipleTesting.jl/stable/)
 provides a number of useful possibilities for this.
 
+If `ci_level` is provided, then `ci_level` confidence intervals are computed using
+the Wald approximation based on the standard errors and quantiles of the ``t``-distribution.
+If `dof` is not provided, then the degrees of freedom are assumed to be infinite,
+which is equivalent to using the normal distribution.
+The corresponding lower and upper edges of the interval are placed in `lower_col`
+and `upper_col`, respectively.
+
 !!! note
     `padjust` is silently ignored if `dof` is not provided.
+
+!!! note
+    Confidence intervals are **not** adjusted for multiple comparisons.
 
 !!! warning
     This feature is experimental and the precise column names and presentation of
