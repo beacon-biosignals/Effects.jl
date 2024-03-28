@@ -90,8 +90,7 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
             result[!, :dof] .= Inf
         end
         # divide by two for twosided
-        # 1+level to pull from upper tail
-        scale = quantile.(TDist.(result[!, :dof]), (1 + ci_level) / 2)
+        scale = abs.(quantile.(TDist.(result[!, :dof]), (1 - ci_level) / 2))
         result[!, lower_col] .= result[!, eff_col] .- result[!, err_col] .* scale
         result[!, upper_col] .= result[!, eff_col] .+ result[!, err_col] .* scale
     end
