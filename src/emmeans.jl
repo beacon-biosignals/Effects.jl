@@ -190,7 +190,7 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
     if !isnothing(ci_level)
         # don't include this in the above if because
         # we don't want to potentially add a dof column if there is no CI
-        if isnothing(dof)
+        if "dof" ∉ stats_cols
             # fall back to z value
             result_df[!, :dof] .= Inf
         end
