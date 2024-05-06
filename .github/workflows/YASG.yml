@@ -29,7 +29,7 @@ jobs:
           version: ${{ matrix.julia-version }}
       - uses: actions/checkout@v4
       - name: Cache
-        uses: julia-actions/cache@v1
+        uses: julia-actions/cache@v2
         with:
             cache-compiled: "true"
       - name: Instantiate `format` environment and format
