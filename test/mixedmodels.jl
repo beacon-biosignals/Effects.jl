@@ -37,3 +37,22 @@ design = Dict(:q => [0])
 eff_not_present = effects(design, model)
 
 @test Matrix(eff_dropped) ≈ Matrix(eff_not_present)
+
+# bootstrap
+design = Dict(Symbol(kept_coef) => [1], :a => [2])
+eff = effects(design, model)
+
+boot = @suppress parametricbootstrap(StableRNG(666), 1000, model)
+bootdf = unstack(DataFrame(boot.β), :coefname, :β)
+# make sure that the bootstrap is correctly zeroing out
+@test all(isequal(-0.0), bootdf[!, dropped_coef])
+
+# now make sure the bootstrap gives approximately the same results
+eff_boot = effects(design, model, boot)
+@test eff_boot.y ≈ eff.y
+@test eff_boot.err ≈ eff.err atol=0.005
+
+eff95 = effects(design, model; level=0.95)
+eff_boot95 = effects(design, model, boot; level=0.95)
+@test eff_boot95.lower ≈ eff95.lower atol=0.1
+@test eff_boot95.upper ≈ eff95.upper atol=0.1
