@@ -12,7 +12,7 @@ on:
         - main
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - StatsModels ${{ matrix.statsmodels }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -21,8 +21,6 @@ jobs:
           - '1'
           - '1.6'
           - 'nightly'
-        statsmodels:
-          - '0.7'
         os:
           - ubuntu-latest
         arch:
@@ -34,11 +32,6 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - name: "Install StatsModels"
-        shell: julia --color=yes --project {0}
-        run: |
-          using Pkg
-          Pkg.add(Pkg.PackageSpec(; name="StatsModels", version="${{ matrix.statsmodels }}"))
       - name: Cache
         uses: julia-actions/cache@v2
         with:
