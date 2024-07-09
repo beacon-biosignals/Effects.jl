@@ -64,3 +64,19 @@ eff_boot95 = effects(design, model, boot; level=0.95)
 @test eff_boot95.y ≈ eff95.y
 @test eff_boot95.lower ≈ eff95.lower atol = 0.1
 @test eff_boot95.upper ≈ eff95.upper atol = 0.1
+
+glmm = @suppress fit(MixedModel,
+                     @formula(use ~ 1 + age + abs2(age) + livch + urban + (1 | dist)),
+                     MixedModels.dataset(:contra),
+                     Bernoulli(); fast=true)
+
+gboot = parametricbootstrap(StableRNG(345), 250, glmm)
+
+design = Dict(:age => -1:1:1)
+geff_boot = effects(design, glmm, gboot; eff_col="y", invlink=AutoInvLink(), level=0.95)
+geff = effects(design, glmm; eff_col="y", invlink=AutoInvLink(), level=0.95)
+
+@test geff_boot.y ≈ geff.y
+@test geff_boot.err ≈ geff.err atol = 0.05
+@test geff_boot.lower ≈ geff.lower atol = 0.05
+@test geff_boot.upper ≈ geff.upper atol = 0.05

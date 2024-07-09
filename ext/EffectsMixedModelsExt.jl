@@ -5,10 +5,11 @@ using Effects
 using MixedModels
 using StatsBase
 
-using Effects: typify, _difference_method!, _responsename
+using Effects: typify, _difference_method!,
+               _responsename, _model_link
 using LinearAlgebra: diag
 using StatsModels: modelcols
-using GLM: Link
+using GLM: GLM, Link
 
 Effects._model_link(m::GeneralizedLinearMixedModel, ::AutoInvLink) = Link(m)
 
@@ -82,8 +83,9 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
             return quantile(col, [lower_tail, upper_tail])
         end
 
-        reference_grid[!, lower_col] = first.(ci)
-        reference_grid[!, upper_col] = last.(ci)
+        invlink = Base.Fix1(GLM.linkinv, _model_link(model, invlink))
+        reference_grid[!, lower_col] = invlink.(first.(ci))
+        reference_grid[!, upper_col] = invlink.(last.(ci))
     end
     return reference_grid
 end
