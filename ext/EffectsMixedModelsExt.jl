@@ -58,11 +58,11 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
     eff = X * coef(model)
     bootdf = unstack(DataFrame(boot.β), :coefname, :β)
     β = Vector{Float64}(undef, ncol(bootdf) - 1)
-    errrep = mapreduce(vcat, 1:nrow(bootdf)) do iter
+    boot_err = mapreduce(vcat, 1:nrow(bootdf)) do iter
         copyto!(β, @view bootdf[iter, 2:end])
         return X * β
     end
-    err = map(std, eachcol(errrep))
+    err = map(std, eachcol(boot_err))
     _difference_method!(eff, err, model, invlink)
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
@@ -74,7 +74,7 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
         lower_tail = (1 - level) / 2
         upper_tail = 1 - lower_tail
 
-        ci = map(eachcol(errrep)) do col
+        ci = map(eachcol(boot_err)) do col
             return quantile(col, [lower_tail, upper_tail])
         end
 
