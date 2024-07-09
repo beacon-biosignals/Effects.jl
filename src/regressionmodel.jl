@@ -10,7 +10,7 @@ determined from the model type.
 !!! compat "Julia 1.9"
     Automatic inverse link determination is implemented using package
     extensions, which are available beginning in Julia 1.9.
-    
+
 An error is thrown if the inverse link cannot be determined. This will
 always occur with Julia versions prior to 1.9, and will otherwise occur
 when no extension has been loaded that specifies the link function for
@@ -143,7 +143,7 @@ _invlink_and_deriv(invlink, η) = (invlink(η), ForwardDiff.derivative(invlink, 
 _invlink_and_deriv(::typeof(identity), η) = (η, 1)
 # this isn't the best name because it sometimes returns the inverse link and sometimes the link (Link())
 # for now, this is private API, but we should see how this goes and whether we can make it public API
-# so local extensions (instead of Package-Extensions) are better supported 
+# so local extensions (instead of Package-Extensions) are better supported
 _model_link(::RegressionModel, invlink::Function) = invlink
 function _model_link(model::RegressionModel, ::AutoInvLink)
     msg = string("cannot automatically determine inverse link for models ",
