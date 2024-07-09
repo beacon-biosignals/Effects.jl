@@ -121,8 +121,8 @@ refgrid[!, :lower] = @. refgrid.weight - 1.96 * refgrid.err
 refgrid[!, :upper] = @. refgrid.weight + 1.96 * refgrid.err
 sort!(refgrid, [:age])
 
-plt = data(refgrid) * mapping(:age, :weight; lower=:lower, upper=:upper, color=:sex) *
-      (visual(Lines) + visual(LinesFill))
+plt = data(refgrid) * mapping(:age, :weight; color=:sex) *
+      (visual(Lines) + mapping(; lower=:lower, upper=:upper) * visual(LinesFill))
 draw(plt)
 ```
 
@@ -149,8 +149,8 @@ refgrid_centered[!, :lower] = @. refgrid_centered.weight - 1.96 * refgrid_center
 refgrid_centered[!, :upper] = @. refgrid_centered.weight + 1.96 * refgrid_centered.err
 sort!(refgrid_centered, [:age])
 
-plt = data(refgrid_centered) * mapping(:age, :weight; lower=:lower, upper=:upper, color=:sex) *
-      (visual(Lines) + visual(LinesFill))
+plt = data(refgrid_centered) * mapping(:age, :weight; color=:sex) *
+      (visual(Lines) + mapping(; lower=:lower, upper=:upper) * visual(LinesFill))
 draw(plt)
 ```
 
