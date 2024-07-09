@@ -26,7 +26,7 @@ eff = effects(design, model)
 @test eff.y + eff.err ≈ eff.upper
 
 β = fixef(model)
-@test only(eff.y) ≈ β[1] + 2 * β[2]  + β[3]
+@test only(eff.y) ≈ β[1] + 2 * β[2] + β[3]
 
 # there is one bit of weirdness -- the removed coefficients behave like any other
 # variable in the "design" that is missing from the model.
@@ -50,9 +50,9 @@ bootdf = unstack(DataFrame(boot.β), :coefname, :β)
 # now make sure the bootstrap gives approximately the same results
 eff_boot = effects(design, model, boot)
 @test eff_boot.y ≈ eff.y
-@test eff_boot.err ≈ eff.err atol=0.005
+@test eff_boot.err ≈ eff.err atol = 0.005
 
 eff95 = effects(design, model; level=0.95)
 eff_boot95 = effects(design, model, boot; level=0.95)
-@test eff_boot95.lower ≈ eff95.lower atol=0.1
-@test eff_boot95.upper ≈ eff95.upper atol=0.1
+@test eff_boot95.lower ≈ eff95.lower atol = 0.1
+@test eff_boot95.upper ≈ eff95.upper atol = 0.1

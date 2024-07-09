@@ -41,7 +41,8 @@ Use the results of a bootstrap to compute empirical error estimates
     This method is experimental and may change in its defaults or
     disappear entirely in a future release!
 """
-function Effects.effects!(reference_grid::DataFrame, model::MixedModel, boot::MixedModelBootstrap;
+function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
+                          boot::MixedModelBootstrap;
                           eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
                           lower_col=:lower, upper_col=:upper,
                           level=nothing)
@@ -65,7 +66,6 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel, boot::Mi
     _difference_method!(eff, err, model, invlink)
     reference_grid[!, something(eff_col, _responsename(model))] = eff
     reference_grid[!, err_col] = err
-
 
     # logic here is slightly different than for other methods
     # because we can compute empirical CIs instead of relying on a Wald
@@ -98,13 +98,14 @@ Use the results of a bootstrap to compute empirical error estimates
     disappear entirely in a future release!
 """
 function Effects.effects(design::AbstractDict, model::MixedModel, boot::MixedModelBootstrap;
-                 eff_col=nothing, err_col=:err, typical=mean,
-                 lower_col=:lower, upper_col=:upper, invlink=identity,
-                 level=nothing)
+                         eff_col=nothing, err_col=:err, typical=mean,
+                         lower_col=:lower, upper_col=:upper, invlink=identity,
+                         level=nothing)
     grid = expand_grid(design)
     dv = something(eff_col, _responsename(model))
     level = isnothing(level) ? 0.68 : level
-    effects!(grid, model, boot; eff_col=dv, err_col, typical, invlink, level, lower_col, upper_col)
+    effects!(grid, model, boot; eff_col=dv, err_col, typical, invlink, level, lower_col,
+             upper_col)
     return grid
 end
 
