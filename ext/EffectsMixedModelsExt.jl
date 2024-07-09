@@ -56,15 +56,13 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
     # the vcov computation, so we're all good!
     X = modelcols(form_typical, reference_grid)
     eff = X * coef(model)
-    bootdf = unstack(DataFrame(boot.β), :coefname, :β)
-    β = Vector{Float64}(undef, ncol(bootdf) - 1)
     # each row is a bootstrap replicate
     # each column is a different row of X
-    # this eems like a weird way to store things, until you remember
+    # this seems like a weird way to store things, until you remember
     # that we aggregate across replicates and thus want to take advantage
     # of column major storage
-    boot_err = mapreduce(vcat, 1:nrow(bootdf)) do iter
-        copyto!(β, @view bootdf[iter, 2:end])
+    boot_err = mapreduce(vcat, groupby(DataFrame(boot.β), :iter)) do gdf
+        β = gdf[!, :β]
         return (X * β)'
     end
 
