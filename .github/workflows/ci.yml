@@ -22,7 +22,6 @@ jobs:
           - '1.6'
           - 'nightly'
         statsmodels:
-          - '0.6'
           - '0.7'
         os:
           - ubuntu-latest
