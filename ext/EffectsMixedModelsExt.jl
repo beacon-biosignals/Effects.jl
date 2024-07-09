@@ -30,6 +30,9 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel;
     return reference_grid
 end
 
+_invlink(model::MixedModel, invlink) = Base.Fix1(GLM.linkinv, _model_link(model, invlink))
+_invlink(::MixedModel, ::typeof(identity)) = identity
+
 """
     effects!(reference_grid::DataFrame, model::MixedModel, boot::MixedModelBootstrap;
              eff_col=nothing, err_col=:err, typical=mean, invlink=identity,
@@ -83,7 +86,7 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
             return quantile(col, [lower_tail, upper_tail])
         end
 
-        invlink = Base.Fix1(GLM.linkinv, _model_link(model, invlink))
+        invlink = _invlink(model, invlink)
         reference_grid[!, lower_col] = invlink.(first.(ci))
         reference_grid[!, upper_col] = invlink.(last.(ci))
     end
