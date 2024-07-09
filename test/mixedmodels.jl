@@ -70,7 +70,7 @@ glmm = @suppress fit(MixedModel,
                      MixedModels.dataset(:contra),
                      Bernoulli(); fast=true)
 
-gboot = parametricbootstrap(StableRNG(345), 250, glmm)
+gboot = @suppress parametricbootstrap(StableRNG(345), 250, glmm)
 
 design = Dict(:age => -1:1:1)
 geff_boot = effects(design, glmm, gboot; eff_col="y", invlink=AutoInvLink(), level=0.95)
