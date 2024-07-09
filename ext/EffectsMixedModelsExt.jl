@@ -58,10 +58,16 @@ function Effects.effects!(reference_grid::DataFrame, model::MixedModel,
     eff = X * coef(model)
     bootdf = unstack(DataFrame(boot.β), :coefname, :β)
     β = Vector{Float64}(undef, ncol(bootdf) - 1)
+    # each row is a bootstrap replicate
+    # each column is a different row of X
+    # this eems like a weird way to store things, until you remember
+    # that we aggregate across replicates and thus want to take advantage
+    # of column major storage
     boot_err = mapreduce(vcat, 1:nrow(bootdf)) do iter
         copyto!(β, @view bootdf[iter, 2:end])
-        return X * β
+        return (X * β)'
     end
+
     err = map(std, eachcol(boot_err))
     _difference_method!(eff, err, model, invlink)
     reference_grid[!, something(eff_col, _responsename(model))] = eff

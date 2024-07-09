@@ -57,7 +57,10 @@ eff_boot = effects(design, model, boot)
 @test eff_boot.y ≈ eff.y
 @test eff_boot.err ≈ eff.err atol = 0.005
 
+# test intervals and multiple rows in refgrid
+design = Dict(Symbol(kept_coef) => 1:2, :a => [2])
 eff95 = effects(design, model; level=0.95)
 eff_boot95 = effects(design, model, boot; level=0.95)
+@test eff_boot95.y ≈ eff95.y
 @test eff_boot95.lower ≈ eff95.lower atol = 0.1
 @test eff_boot95.upper ≈ eff95.upper atol = 0.1
