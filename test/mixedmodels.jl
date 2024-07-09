@@ -26,6 +26,11 @@ eff = effects(design, model)
 @test eff.y + eff.err ≈ eff.upper
 
 β = fixef(model)
+# note that in the design above, we had a = 2
+# β[1] = intercept
+# β[2] = a, multiply by 2 because that's what we put in the design
+# β[3] = whatever of x|x2 wasn't pivoted out, "multiply by 1" (ie do nothing)
+#        because we had keep_coef = 1 in the design
 @test only(eff.y) ≈ β[1] + 2 * β[2] + β[3]
 
 # there is one bit of weirdness -- the removed coefficients behave like any other
