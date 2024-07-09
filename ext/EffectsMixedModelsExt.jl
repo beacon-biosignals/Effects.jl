@@ -1,7 +1,6 @@
 module EffectsMixedModelsExt
 
 using DataFrames
-using Distributions
 using Effects
 using MixedModels
 using StatsBase
