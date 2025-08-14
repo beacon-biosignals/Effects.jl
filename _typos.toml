@@ -8,11 +8,12 @@ missings = "missings"
 Extraversion = "Extraversion"
 extraversion = "extraversion"
 Fo = "Fo"
+# we use this a lot for 'type'
+typ = "typ"
 
 [default.extend-words]
 Lik = "Lik"
 missings = "missings"
-
 
 [type.package_toml]
 # Don't check spellings in these files
