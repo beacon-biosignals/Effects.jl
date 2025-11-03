@@ -10,6 +10,8 @@ extraversion = "extraversion"
 Fo = "Fo"
 # we use this a lot for 'type'
 typ = "typ"
+# for the plural of SEM
+sems = "sems"
 
 [default.extend-words]
 Lik = "Lik"
