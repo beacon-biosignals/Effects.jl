@@ -1,7 +1,7 @@
 name = "Effects"
 uuid = "8f03c58b-bd97-4933-a826-f71b64d2cca2"
-authors = ["Beacon Biosignals, Inc."]
 version = "1.6.0"
+authors = ["Beacon Biosignals, Inc."]
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
@@ -35,7 +35,7 @@ InlineStrings = "1.4"
 LinearAlgebra = "1"
 MixedModels = "3.9, 4, 5"
 MultipleTesting = "0.5, 0.6"
-RDatasets = "0.7.7"
+RDatasets = "0.7.7, 0.8"
 StableRNGs = "1.0"
 StandardizedPredictors = "0.1, 1"
 Statistics = "1"
