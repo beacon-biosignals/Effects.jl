@@ -9,7 +9,14 @@ using StatsModels
 using Test
 using Vcov
 
+using StatsAPI: crossmodelmatrix
+
 b0, b1, b2, b1_2 = beta = [0.0, 1.0, 1.0, -1.0]
+
+# test piracy for compat with later versions of Vcov.jl
+@static if !hasmethod(Vcov.invcrossmodelmatrix, Tuple{RegressionModel})
+    Vcov.invcrossmodelmatrix(x::RegressionModel) = inv(crossmodelmatrix(x))
+end
 
 @testset "simple" begin
     x = collect(-10:10)
