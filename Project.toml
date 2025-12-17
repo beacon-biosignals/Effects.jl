@@ -1,6 +1,6 @@
 name = "Effects"
 uuid = "8f03c58b-bd97-4933-a826-f71b64d2cca2"
-version = "1.6.0"
+version = "1.7.0"
 authors = ["Beacon Biosignals, Inc."]
 
 [deps]

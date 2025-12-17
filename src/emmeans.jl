@@ -14,13 +14,28 @@ of the underlying standard deviations.
 """
 pooled_sem(sems...) = sqrt(sum(abs2, sems))
 
+function _ci!(df::AbstractDataFrame, level;
+              eff_col::AbstractString, err_col::AbstractString,
+              lower_col::AbstractString,
+              upper_col::AbstractString)
+    transform!(df,
+               [eff_col, err_col, "dof"] => ByRow() do eff, err, ν
+                   scale = quantile(TDist(ν), (1 + level) / 2)
+                   lower = eff - scale * err
+                   upper = eff + scale * err
+                   return (lower, upper)
+               end => [lower_col, upper_col])
+    return df
+end
+
 # similar to effects (and the underlying math is the same) but
 # the establishment of the reference grid is different
 # we don't allow specifying the "typifier" here -- if you want that,
 # then choose a less full service function
 """
     emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
-            invlink=identity, levels=Dict(), dof=nothing)
+            invlink=identity, levels=Dict(), dof=nothing,
+            ci_level=nothing, lower_col=:lower, upper_col=:upper)
 
 Compute estimated marginal means, a.k.a. least-square (LS) means for a model.
 
@@ -39,6 +54,13 @@ a large number of observations, `dof=Inf` may be appropriate.
 
 `invlink`, `eff_col` and `err_col` work exactly as in [`effects!`](@ref).
 
+If `ci_level` is provided, then `ci_level` confidence intervals are computed using
+the Wald approximation based on the standard errors and quantiles of the ``t``-distribution.
+If `dof` is not provided, then the degrees of freedom are assumed to be infinite,
+which is equivalent to using the normal distribution.
+The corresponding lower and upper edges of the interval are placed in `lower_col`
+and `upper_col`, respectively.
+
 Estimated marginal means are closely related to effects and are also known as
 least-square means. The functionality here is a convenience
 wrapper for [`effects`](@ref) and maps onto the concept of least-square means
@@ -49,7 +71,8 @@ not currently supported. The documentation for the [R package emmeans](https://c
 explains [the background in more depth](https://cran.r-project.org/web/packages/emmeans/vignettes/basics.html).
 """
 function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
-                 invlink=identity, levels=Dict(), dof=nothing)
+                 invlink=identity, levels=Dict(), dof=nothing, ci_level=nothing,
+                 lower_col=:lower, upper_col=:upper)
     form = formula(model)
     typical = mean
     defaults = Dict{Symbol,Vector}()
@@ -68,18 +91,30 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     grid = expand_grid(levels)
     eff_col = string(something(eff_col, _responsename(model)))
     err_col = string(err_col)
+    lower_col = string(lower_col)
+    upper_col = string(upper_col)
 
     result = effects!(grid, model; eff_col, err_col, typical, invlink)
     if !isnothing(dof)
         result[!, :dof] .= _dof(dof, model)
+    end
+    if !isnothing(ci_level)
+        # we keep this separate so that we don't add a DoF column
+        # if there is no CI
+        if isnothing(dof)
+            result[!, :dof] .= Inf
+        end
+        _ci!(result, ci_level; eff_col, err_col, lower_col, upper_col)
     end
     return result
 end
 
 """
     empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
-            invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
-    empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
+            invlink=identity, levels=Dict(), dof=nothing, padjust=identity,
+            ci_level=nothing, lower_col=:lower, upper_col=:upper)
+    empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
+            ci_level=nothing, lower_col=:lower, upper_col=:upper)
 
 Compute pairwise differences of estimated marginal means.
 
@@ -104,8 +139,18 @@ If `padjust` is provided, then it is used to compute adjust the p-values for
 multiple comparisons. [`MultipleTesting.jl`](https://juliangehring.github.io/MultipleTesting.jl/stable/)
 provides a number of useful possibilities for this.
 
+If `ci_level` is provided, then `ci_level` confidence intervals are computed using
+the Wald approximation based on the standard errors and quantiles of the ``t``-distribution.
+If `dof` is not provided, then the degrees of freedom are assumed to be infinite,
+which is equivalent to using the normal distribution.
+The corresponding lower and upper edges of the interval are placed in `lower_col`
+and `upper_col`, respectively.
+
 !!! note
     `padjust` is silently ignored if `dof` is not provided.
+
+!!! note
+    Confidence intervals are **not** adjusted for multiple comparisons.
 
 !!! warning
     This feature is experimental and the precise column names and presentation of
@@ -122,18 +167,22 @@ provides a number of useful possibilities for this.
     discussed in [the documentation for the R package `emmeans`](https://cran.r-project.org/web/packages/emmeans/vignettes/transformations.html).
 """
 function empairs(model::RegressionModel; eff_col=nothing, err_col=:err,
-                 invlink=identity, levels=Dict(), dof=nothing, padjust=identity)
+                 invlink=identity, levels=Dict(), dof=nothing, padjust=identity,
+                 ci_level=nothing, lower_col=:lower, upper_col=:upper)
     eff_col = something(eff_col, _responsename(model))
     em = emmeans(model; eff_col, err_col, invlink, levels, dof)
-    return empairs(em; eff_col, err_col, padjust)
+    return empairs(em; eff_col, err_col, padjust, ci_level, lower_col, upper_col)
 end
 
-function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
+function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
+                 ci_level=nothing, lower_col=:lower, upper_col=:upper)
     # need to enforce that we're all the same type
     # (mixing string and symbol is an issue with Not
     #  and a few other things below)
     eff_col = string(eff_col)
     err_col = string(err_col)
+    lower_col = string(lower_col)
+    upper_col = string(upper_col)
     stats_cols = [eff_col, err_col]
     "dof" in names(df) && push!(stats_cols, "dof")
 
@@ -169,6 +218,12 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity)
                        return p
                    end => "Pr(>|t|)")
         transform!(result_df, "Pr(>|t|)" => padjust => "Pr(>|t|)")
+    end
+    if !isnothing(ci_level)
+        if "dof" ∉ stats_cols
+            result_df[!, :dof] .= Inf
+        end
+        _ci!(result_df, ci_level; eff_col, err_col, lower_col, upper_col)
     end
     return result_df
 end
