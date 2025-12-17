@@ -18,7 +18,8 @@ function _ci!(df::AbstractDataFrame, level;
               eff_col::AbstractString, err_col::AbstractString,
               lower_col::AbstractString,
               upper_col::AbstractString)
-    transform!(df, [eff_col, err_col, "dof"] => ByRow() do eff, err, ν
+    transform!(df,
+               [eff_col, err_col, "dof"] => ByRow() do eff, err, ν
                    scale = quantile(TDist(ν), (1 + level) / 2)
                    lower = eff - scale * err
                    upper = eff + scale * err
