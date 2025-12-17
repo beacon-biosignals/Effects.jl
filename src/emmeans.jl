@@ -14,6 +14,19 @@ of the underlying standard deviations.
 """
 pooled_sem(sems...) = sqrt(sum(abs2, sems))
 
+function _ci!(df::AbstractDataFrame, level;
+              eff_col::AbstractString, err_col::AbstractString,
+              lower_col::AbstractString,
+              upper_col::AbstractString)
+    transform!(df, [eff_col, err_col, "dof"] => ByRow() do eff, err, ν
+                   scale = quantile(TDist(ν), (1 + level) / 2)
+                   lower = eff - scale * err
+                   upper = eff + scale * err
+                   return (lower, upper)
+               end => [lower_col, upper_col])
+    return df
+end
+
 # similar to effects (and the underlying math is the same) but
 # the establishment of the reference grid is different
 # we don't allow specifying the "typifier" here -- if you want that,
@@ -77,22 +90,20 @@ function emmeans(model::RegressionModel; eff_col=nothing, err_col=:err,
     grid = expand_grid(levels)
     eff_col = string(something(eff_col, _responsename(model)))
     err_col = string(err_col)
+    lower_col = string(lower_col)
+    upper_col = string(upper_col)
 
     result = effects!(grid, model; eff_col, err_col, typical, invlink)
     if !isnothing(dof)
         result[!, :dof] .= _dof(dof, model)
     end
     if !isnothing(ci_level)
-        # don't include this in the above if because
-        # we don't want to potentially add a dof column if there is no CI
+        # we keep this separate so that we don't add a DoF column
+        # if there is no CI
         if isnothing(dof)
-            # fall back to z value
             result[!, :dof] .= Inf
         end
-        # divide by two for twosided
-        scale = abs.(quantile.(TDist.(result[!, :dof]), (1 - ci_level) / 2))
-        result[!, lower_col] .= result[!, eff_col] .- result[!, err_col] .* scale
-        result[!, upper_col] .= result[!, eff_col] .+ result[!, err_col] .* scale
+        _ci!(result, ci_level; eff_col, err_col, lower_col, upper_col)
     end
     return result
 end
@@ -169,6 +180,8 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
     #  and a few other things below)
     eff_col = string(eff_col)
     err_col = string(err_col)
+    lower_col = string(lower_col)
+    upper_col = string(upper_col)
     stats_cols = [eff_col, err_col]
     "dof" in names(df) && push!(stats_cols, "dof")
 
@@ -206,17 +219,10 @@ function empairs(df::AbstractDataFrame; eff_col, err_col=:err, padjust=identity,
         transform!(result_df, "Pr(>|t|)" => padjust => "Pr(>|t|)")
     end
     if !isnothing(ci_level)
-        # don't include this in the above if because
-        # we don't want to potentially add a dof column if there is no CI
         if "dof" ∉ stats_cols
-            # fall back to z value
             result_df[!, :dof] .= Inf
         end
-        # divide by two for twosided
-        # 1+level to pull from upper tail
-        scale = quantile.(TDist.(result_df[!, :dof]), (1 + ci_level) / 2)
-        result_df[!, lower_col] .= result_df[!, eff_col] .- result_df[!, err_col] .* scale
-        result_df[!, upper_col] .= result_df[!, eff_col] .+ result_df[!, err_col] .* scale
+        _ci!(result_df, ci_level; eff_col, err_col, lower_col, upper_col)
     end
     return result_df
 end
