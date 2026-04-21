@@ -16,7 +16,7 @@ jobs:
         with:
           version: 1
       - name: Cache
-        uses: julia-actions/cache@v3
+        uses: julia-actions/cache@v3.0.1
         with:
             cache-compiled: "true"
       - uses: julia-actions/julia-buildpkg@latest
