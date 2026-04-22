@@ -1,6 +1,6 @@
 name = "Effects"
 uuid = "8f03c58b-bd97-4933-a826-f71b64d2cca2"
-version = "1.7.0"
+version = "1.7.1"
 authors = ["Beacon Biosignals, Inc."]
 
 [deps]
@@ -30,7 +30,7 @@ DataFrames = "0.22, 1.0, 1.1"
 DataStructures = "0.18, 0.19"
 Distributions = "0.25"
 ForwardDiff = "0.10, 1"
-GLM = "1.5.1"
+GLM = "1.7"
 InlineStrings = "1.4"
 LinearAlgebra = "1"
 MixedModels = "3.9, 4, 5"
