@@ -45,4 +45,4 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           tool_name: JuliaFormatter
-          fail_on_error: true
+          fail_level: error
