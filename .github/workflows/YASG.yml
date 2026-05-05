@@ -34,7 +34,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Cache
-        uses: julia-actions/cache@9a93c5fb3e9c1c20b60fc80a478cae53e38618a4 # v3
+        uses: julia-actions/cache@9a93c5fb3e9c1c20b60fc80a478cae53e38618a4 # v3.0.2
         with:
             cache-compiled: "true"
       - name: Instantiate `format` environment and format
