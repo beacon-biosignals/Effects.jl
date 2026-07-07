@@ -26,7 +26,7 @@ wtdat = DataFrame(; feed=repeat(["A", "B", "C"], inner=reps),
                           300 .+ sd * randn(rng, reps)])
 ```
 
-If we fit a linear model to this data using default treatment/dummy coding, then the coefficient corresponding of feed `C` is significant.
+If we fit a linear model to this data using default treatment/dummy coding, then the coefficient corresponding to feed `C` is significant.
 
 ```@example contrasts
 mod_treat = lm(@formula(weight ~ 1 + feed), wtdat)
