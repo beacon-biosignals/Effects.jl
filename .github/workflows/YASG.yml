@@ -24,7 +24,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: julia-actions/setup-julia@fa02766e078afaaf09b14210362cee14137e6a32  # v3.0.2
+      - uses: julia-actions/setup-julia@da908477b5db94c10ffce8cfea9f2b3b9d5db687  # v3.0.3
         with:
           version: lts
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -38,7 +38,7 @@ jobs:
         run: |
           julia --project=format -O0 -e 'using Pkg; Pkg.instantiate()'
           julia --project=format -O0 'format/run.jl'
-      - uses: reviewdog/action-suggester@8219e3d2e54a63ddecf1318659aa541bd1fa7202 # v1.26.2
+      - uses: reviewdog/action-suggester@ac5ce6d94e35c00530447dc63c271e38e4fd36c6 # v1.26.3
         if: github.event_name == 'pull_request'
         with:
           tool_name: JuliaFormatter
